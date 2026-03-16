@@ -15,7 +15,7 @@ Projeto desenvolvido para a disciplina de Projeto de Desenvolvimento Backend —
 
 | Nome Completo | Matrícula | GitHub |
 |---|---|---|
-| [Nome] | [matrícula] | [@username] |
+| Bruno Miguel Primo | 202501022961 | BrunoMP22 |
 | [Nome] | [matrícula] | [@username] |
 | [Nome] | [matrícula] | [@username] |
 | [Nome] | [matrícula] | [@username] |
