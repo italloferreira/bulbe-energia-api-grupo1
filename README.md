@@ -19,7 +19,7 @@ Projeto desenvolvido para a disciplina de Projeto de Desenvolvimento Backend —
 | Itallo Ferreira | 202503042871 | italloferreira |
 | Marcus Carvalho | 202502931743 | MarcusSantana |
 | Gabriel Manata | 202502924747 | GabrielManata |
-| Cauã Caldeira | 202503052042 | harlle |
+| Cauã Caldeira | 202503052042 | Caua-Caldeira-harlle |
 | Miguel Lacerda | 202501025498 | MiguelLacerda |
 
 ---
