@@ -16,9 +16,11 @@ Projeto desenvolvido para a disciplina de Projeto de Desenvolvimento Backend —
 | Nome Completo | Matrícula | GitHub |
 |---|---|---|
 | Bruno Miguel Primo | 202501022961 | BrunoMP22 |
-| [Nome] | [matrícula] | [@username] |
-| [Nome] | [matrícula] | [@username] |
-| [Nome] | [matrícula] | [@username] |
+| Itallo Ferreira | 202503042871 | italloferreira |
+| Marcus Carvalho | 202502931743 | MarcusSantana |
+| Gabriel Manata | 202502924747 | GabrielManata |
+| Cauã Caldeira | 202503052042 | harlle |
+| Miguel Lacerda | 202501025498 | MiguelLacerda |
 
 ---
 
