@@ -51,12 +51,29 @@ Breve descrição do sistema Bulbe Energia e do objetivo desta API.
 
 ## 📡 Endpoints da API ⬅️ (esboço inicial)
 
-> Consulte o arquivo completo em [`docs/requisitos.md`](./docs/requisitos.md).
+| Verbo | Path | RF | Status esperado |
+|-------|------|----|-----------------|
+| GET | /api/v1/catalogo/home | RF-01 | 200 |
+| GET | /api/v1/produtos?search=lampada | RF-02 | 200 |
+| GET | /api/v1/categorias/{slug}/produtos | RF-03 | 200, 404 |
+| GET | /api/v1/produtos/{id} | RF-04 | 200, 404 |
+| GET | /api/v1/produtos/{id}/avaliacoes | RF-05 | 200 |
+| POST | /api/v1/produtos/{id}/avaliacoes | RF-06 | 201, 400 |
+| POST | /api/v1/carrinho/itens | RF-07 | 201 |
+| GET | /api/v1/carrinho | RF-08 | 200 |
+| PATCH | /api/v1/carrinho/itens/{itemId} | RF-08 | 200, 404 |
+| DELETE | /api/v1/carrinho/itens/{itemId} | RF-08 | 204, 404 |
+| POST | /api/v1/checkout/entrega | RF-09 | 201, 400 |
+| POST | /api/v1/cupons/aplicacoes | RF-10 | 200, 400, 404 |
+| GET | /api/v1/checkout/fretes?cep=00000-000 | RF-11 | 200, 400 |
+| POST | /api/v1/checkout/pagamento | RF-12 | 200, 201, 400 |
+| POST | /api/v1/pedidos | RF-13 | 201, 400, 422 |
+| GET | /api/v1/pedidos/{pedidoId} | RF-14 | 200, 404 |
+| GET | /api/v1/usuarios/me | RF-15 | 200, 401 |
+| PATCH | /api/v1/usuarios/me | RF-15 | 200, 204, 400, 401 |
+| POST | /api/v1/suporte/solicitacoes | RF-16 | 201, 400 |
+| GET | /api/v1/notificacoes | RF-17 | 200, 401 |
 
-| Verbo | Path | Descrição |
-|-------|------|-----------|
-| GET   | /api/v1/... | [descrição] |
-| ...   | ... | ... |
 
 ---
 
