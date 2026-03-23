@@ -7,7 +7,7 @@
 - Itallo Ferreira — 202503042871  
 - Bruno Primo — 202501022961  
 - Miguel Lacerda — 202501025498  
-- Marcos Paulo — 202502931743  
+- Marcus Paulo — 202502931743  
 - Gabriel Manata — 202502924747  
 - Cauã Caldeira —  202503052042
 
