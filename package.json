@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/italloferreira/bulbe-energia-api-grupo1#readme",
   "dependencies": {
+    "cors": "^2.8.6",
     "express": "^5.2.1"
   }
 }

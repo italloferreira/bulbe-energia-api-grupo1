@@ -130,3 +130,25 @@ Distribuído sob a licença MIT. Consulte o arquivo [LICENSE](./LICENSE) para ma
 ```
 
 ---
+
+```
+bulbe-energia-api-grupo1
+├─ app.js
+├─ docs
+│  ├─ openapi.yaml
+│  └─ requisitos.md
+├─ index.html
+├─ LICENSE
+├─ package-lock.json
+├─ package.json
+├─ README.md
+└─ src
+   ├─ carrinho.js
+   ├─ controllers
+   │  ├─ carrinhoController.js
+   │  └─ produtoController.js
+   ├─ data
+   │  └─ data.js
+   └─ produtos.js
+
+```

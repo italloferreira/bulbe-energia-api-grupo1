@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Carrinho</title>
+
+  <style>
+
+    body {
+      font-family: Arial;
+      padding: 30px;
+    }
+
+    .item {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      margin-right: 10px;
+      cursor: pointer;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <h1>Carrinho</h1>
+
+  <div id="carrinho"></div>
+
+  <script>
+
+    async function carregarCarrinho() {
+
+      const response =
+        await fetch('http://localhost:3000/api/v1/carrinho');
+
+      const data = await response.json();
+
+      const divCarrinho =
+        document.getElementById('carrinho');
+
+      divCarrinho.innerHTML = '';
+
+      data.itens.forEach(item => {
+
+        divCarrinho.innerHTML += `
+
+          <div class="item">
+
+            <h2>${item.nome}</h2>
+
+            <p>Preço: R$ ${item.preco}</p>
+
+            <p>Quantidade: ${item.quantidade}</p>
+
+            <button onclick="adicionar(${item.produtoId})">
+              +
+            </button>
+
+            <button onclick="remover(${item.itemId})">
+              Remover
+            </button>
+
+          </div>
+
+        `;
+      });
+
+      divCarrinho.innerHTML += `
+
+        <h2>Total de itens: ${data.totalItens}</h2>
+
+        <h2>Subtotal: R$ ${data.subtotal}</h2>
+
+      `;
+    }
+
+    async function adicionar(produtoId) {
+
+      await fetch(
+        'http://localhost:3000/api/v1/carrinho/itens',
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type': 'application/json'
+          },
+
+          body: JSON.stringify({
+            produtoId: produtoId,
+            quantidade: 1
+          })
+        }
+      );
+
+      carregarCarrinho();
+    }
+
+    async function remover(itemId) {
+
+      await fetch(
+        `http://localhost:3000/api/v1/carrinho/itens/${itemId}`,
+        {
+          method: 'DELETE'
+        }
+      );
+
+      carregarCarrinho();
+    }
+
+    carregarCarrinho();
+
+  </script>
+
+</body>
+</html>
