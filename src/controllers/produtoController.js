@@ -1,98 +1,47 @@
 const produtos = require('../produtos');
 
-const carrinho = require('../data/data');
+// RF-01 · Catálogo home
+function listarCatalogoHome(req, res) {
 
-function getCarrinhoFormatado() {
+  const produtosAtivos = produtos.filter(
+    p => p.ativo
+  );
 
-  const itensFormatados = carrinho.itens.map(item => {
-
-    const produtoAtual = produtos.find(
-      p => p.id === item.produtoId
-    );
-
-    if (!produtoAtual || !produtoAtual.ativo) {
-
-      return {
-        itemId: item.itemId,
-        produtoId: item.produtoId,
-        nome: item.nome,
-        quantidade: item.quantidade,
-        indisponivel: true
-      };
-    }
-
-    const precoAtual = produtoAtual.preco;
-
-    const precoComDesconto =
-      precoAtual * (1 - produtoAtual.desconto / 100);
-
-    return {
-      itemId: item.itemId,
-
-      produtoId: item.produtoId,
-
-      nome: produtoAtual.nome,
-
-      preco: precoAtual,
-
-      desconto: produtoAtual.desconto,
-
-      quantidade: item.quantidade,
-
-      subtotal: parseFloat(
-        (precoComDesconto * item.quantidade).toFixed(2)
-      ),
-
-      indisponivel: false
-    };
+  res.json({
+    produtos: produtosAtivos
   });
-
-  const subtotal = itensFormatados.reduce((acc, item) => {
-
-    if (item.indisponivel) {
-      return acc;
-    }
-
-    return acc + item.subtotal;
-
-  }, 0);
-
-  return {
-
-    itens: itensFormatados,
-
-    quantidadeItens: itensFormatados.reduce(
-      (acc, item) => acc + item.quantidade,
-      0
-    ),
-
-    subtotal: parseFloat(subtotal.toFixed(2)),
-
-    totalEstimado: parseFloat(subtotal.toFixed(2))
-  };
 }
 
-// RF-07 · Adicionar item ao carrinho
-function adicionarItem(req, res) {
+// RF-02 · Buscar produtos
+function listarProdutos(req, res) {
 
-  const { produtoId, quantidade, usuarioId } = req.body;
+  const { search } = req.query;
 
-  if (!produtoId || !quantidade || !usuarioId) {
+  const lista = produtos.filter(
+    p => p.ativo
+  );
 
-    return res.status(400).json({
-      erro: 'produtoId, quantidade e usuarioId são obrigatórios'
-    });
+  if (search) {
+
+    const termo = search.toLowerCase();
+
+    const resultado = lista.filter(
+      p => p.nome.toLowerCase().includes(termo)
+    );
+
+    return res.json(resultado);
   }
 
-  if (!Number.isInteger(quantidade) || quantidade <= 0) {
+  res.json(lista);
+}
 
-    return res.status(400).json({
-      erro: 'quantidade deve ser um inteiro positivo'
-    });
-  }
+// RF-04 · Produto por ID
+function buscarProdutoPorId(req, res) {
+
+  const id = parseInt(req.params.id);
 
   const produto = produtos.find(
-    p => p.id === produtoId && p.ativo
+    p => p.id === id
   );
 
   if (!produto) {
@@ -102,152 +51,74 @@ function adicionarItem(req, res) {
     });
   }
 
-  const itemExistente = carrinho.itens.find(
-    i =>
-      i.produtoId === produtoId &&
-      i.usuarioId === usuarioId
-  );
+  const isAdmin =
+    req.headers['x-admin'] === 'true';
 
-  const qtdAtual = itemExistente
-    ? itemExistente.quantidade
-    : 0;
-
-  if (qtdAtual + quantidade > produto.estoque) {
-
-    return res.status(409).json({
-      erro: 'Quantidade solicitada excede o estoque disponível'
-    });
-  }
-
-  if (itemExistente) {
-
-    itemExistente.quantidade += quantidade;
-
-  } else {
-
-    carrinho.itens.push({
-      itemId: carrinho._proximoId++,
-
-      usuarioId,
-
-      produtoId: produto.id,
-
-      nome: produto.nome,
-
-      preco: produto.preco,
-
-      desconto: produto.desconto,
-
-      quantidade
-    });
-  }
-
-  return res.status(201).json(
-    getCarrinhoFormatado()
-  );
-}
-
-// RF-08 · Visualizar carrinho
-function visualizarCarrinho(req, res) {
-
-  res.json(
-    getCarrinhoFormatado()
-  );
-}
-
-// RF-08 · Atualizar quantidade
-function atualizarItem(req, res) {
-
-  const itemId = parseInt(req.params.itemId);
-
-  const { quantidade } = req.body;
-
-  if (
-    quantidade === undefined ||
-    !Number.isInteger(quantidade) ||
-    quantidade < 0
-  ) {
-
-    return res.status(400).json({
-      erro: 'quantidade deve ser um inteiro maior ou igual a 0'
-    });
-  }
-
-  const index = carrinho.itens.findIndex(
-    i => i.itemId === itemId
-  );
-
-  if (index === -1) {
+  if (!produto.ativo && !isAdmin) {
 
     return res.status(404).json({
-      erro: 'Item não encontrado no carrinho'
+      erro: 'Produto não encontrado'
     });
   }
 
-  if (quantidade === 0) {
-
-    carrinho.itens.splice(index, 1);
-
-    return res.json(
-      getCarrinhoFormatado()
-    );
-  }
-
-  const item = carrinho.itens[index];
-
-  const produto = produtos.find(
-    p => p.id === item.produtoId
-  );
-
-  if (quantidade > produto.estoque) {
-
-    return res.status(409).json({
-      erro: 'Quantidade solicitada excede o estoque disponível'
-    });
-  }
-
-  item.quantidade = quantidade;
-
-  return res.json(
-    getCarrinhoFormatado()
-  );
+  return res.json({
+    id: produto.id,
+    nome: produto.nome,
+    descricaoLonga: produto.descricaoLonga,
+    galeriaImagens: produto.galeriaImagens,
+    preco: produto.preco,
+    desconto: produto.desconto,
+    marca: produto.marca,
+    especificacoesTecnicas:
+      produto.especificacoesTecnicas,
+    estoque: produto.estoque,
+    avaliacoesResumidas:
+      produto.avaliacoesResumidas
+  });
 }
 
-// RF-08 · Remover item
-function removerItem(req, res) {
+// RF · Produtos em destaque
+function listarDestaques(req, res) {
 
-  const itemId = parseInt(req.params.itemId);
+  const destaques = produtos
+    .filter(p =>
+      p.destaque &&
+      p.ativo &&
+      p.estoque > 0
+    )
+    .slice(0, 10);
 
-  const { usuarioId } = req.body;
-
-  const index = carrinho.itens.findIndex(
-    i => i.itemId === itemId
+  res.set(
+    'Cache-Control',
+    'public, max-age=300'
   );
 
-  if (index === -1) {
+  res.json(destaques);
+}
 
-    return res.status(404).json({
-      erro: 'Item não encontrado no carrinho'
-    });
-  }
+// RF · Produtos em oferta
+function listarOfertas(req, res) {
 
-  const item = carrinho.itens[index];
+  const ofertas = produtos
+    .filter(p =>
+      p.desconto > 0 &&
+      p.ativo &&
+      p.estoque > 0
+    )
+    .slice(0, 10);
 
-  if (item.usuarioId !== usuarioId) {
+  res.set(
+    'Cache-Control',
+    'public, max-age=300'
+  );
 
-    return res.status(403).json({
-      erro: 'Forbidden'
-    });
-  }
-
-  carrinho.itens.splice(index, 1);
-
-  return res.status(204).send();
+  res.json(ofertas);
 }
 
 module.exports = {
-  adicionarItem,
-  visualizarCarrinho,
-  atualizarItem,
-  removerItem
+  listarCatalogoHome,
+  listarProdutos,
+  buscarProdutoPorId,
+  listarDestaques,
+  listarOfertas
 };
