@@ -5,7 +5,8 @@ const {
   listarProdutos,
   buscarProdutoPorId,
   listarDestaques,
-  listarOfertas
+  listarOfertas,
+  buscarProdutos
 } = require('../controllers/produtoController');
 
 const router = express.Router();
@@ -16,13 +17,8 @@ router.get(
 );
 
 router.get(
-  '/produtos',
-  listarProdutos
-);
-
-router.get(
-  '/produtos/:id',
-  buscarProdutoPorId
+  '/produtos/buscar',
+  buscarProdutos
 );
 
 router.get(
@@ -33,6 +29,16 @@ router.get(
 router.get(
   '/produtos/ofertas',
   listarOfertas
+);
+
+router.get(
+  '/produtos',
+  listarProdutos
+);
+
+router.get(
+  '/produtos/:id',
+  buscarProdutoPorId
 );
 
 module.exports = router;

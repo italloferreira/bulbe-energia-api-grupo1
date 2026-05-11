@@ -1,4 +1,11 @@
-const produtos = require('../produtos');
+﻿const produtos = require('../produtos');
+
+function normalizar(texto) {
+  return texto
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase();
+}
 
 // RF-01 · Catálogo home
 function listarCatalogoHome(req, res) {
@@ -12,7 +19,7 @@ function listarCatalogoHome(req, res) {
   });
 }
 
-// RF-02 · Buscar produtos
+// RF-02 · Listar produtos
 function listarProdutos(req, res) {
 
   const { search } = req.query;
@@ -115,10 +122,56 @@ function listarOfertas(req, res) {
   res.json(ofertas);
 }
 
+// US-04 · Buscar produtos por palavra-chave
+function buscarProdutos(req, res) {
+
+  const { q, page, limit } = req.query;
+
+  if (!q || q.trim().length < 2) {
+    return res.status(400).json({
+      erro: 'O termo de busca deve ter pelo menos 2 caracteres.'
+    });
+  }
+
+  const termo = normalizar(q.trim());
+
+  const ativos = produtos.filter(p => p.ativo);
+
+  const comNome = [];
+  const comDescricao = [];
+
+  for (const p of ativos) {
+    const nomeNorm = normalizar(p.nome);
+    const descNorm = normalizar(p.descricaoLonga || '');
+
+    if (nomeNorm.includes(termo)) {
+      comNome.push(p);
+    } else if (descNorm.includes(termo)) {
+      comDescricao.push(p);
+    }
+  }
+
+  const resultado = [...comNome, ...comDescricao];
+
+  const total = resultado.length;
+  const pagina = Math.max(1, parseInt(page) || 1);
+  const porPagina = Math.min(50, Math.max(1, parseInt(limit) || 12));
+  const totalPaginas = Math.ceil(total / porPagina) || 1;
+  const inicio = (pagina - 1) * porPagina;
+
+  return res.json({
+    total,
+    pagina,
+    totalPaginas,
+    produtos: resultado.slice(inicio, inicio + porPagina)
+  });
+}
+
 module.exports = {
   listarCatalogoHome,
   listarProdutos,
   buscarProdutoPorId,
   listarDestaques,
-  listarOfertas
+  listarOfertas,
+  buscarProdutos
 };
