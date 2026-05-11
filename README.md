@@ -1,133 +1,122 @@
-# ⚡ Bulbe Energia API
-
-**Backend do sistema de monitoramento de energia renovável**  
-Projeto desenvolvido para a disciplina de Projeto de Desenvolvimento Backend — IBMEC
-
-![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
-![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)
-![License](https://img.shields.io/badge/license-MIT-blue)
-
-</div>
-
----
-
-## 👥 Equipe ⬅️
-
-| Nome Completo | Matrícula | GitHub 
-|---|---|---|
-| Bruno Miguel Primo | 202501022961 | BrunoMP22 |
-| Itallo Ferreira | 202503042871 | italloferreira |
-| Marcus Carvalho | 202502931743 | MarcusCarvalho |
-| Gabriel Manata | 202502924747 | GabrielManata |
-| Cauã Caldeira   | 202503052042 | Caua-Caldeira-harlle |
-| Miguel Lacerda | 202501025498 | MiguelLacerda14 |
-
----
-
 ## 📋 Sobre o Projeto ⬅️
 
-Breve descrição do sistema Bulbe Energia e do objetivo desta API.  
-(3 a 5 linhas explicando o contexto do projeto)
+A **Bulbe Energia API** é o backend de um sistema voltado para venda, consulta e gerenciamento de produtos relacionados à energia, eletrônicos e soluções sustentáveis.  
+Nesta etapa, a API disponibiliza recursos para listagem de produtos, consulta de detalhes, filtros por categoria, vitrines de destaque/ofertas e gerenciamento básico de carrinho.  
+O projeto está sendo desenvolvido de forma incremental para a disciplina de Projeto de Desenvolvimento Backend — IBMEC, com evolução prevista para autenticação, checkout, pedidos, documentação OpenAPI e integração futura com banco de dados.
 
 ---
 
 ## 🏗️ Arquitetura
 
-> *A ser preenchido na Sprint 2 após definição da arquitetura MVC.*
+O projeto utiliza uma arquitetura em camadas baseada no padrão **MVC simplificado**, separando as responsabilidades principais da aplicação:
+
+- **app.js**: ponto de entrada da aplicação. Configura o Express, habilita JSON, CORS e registra as rotas da API.
+- **routes/**: camada responsável por definir os endpoints HTTP e direcionar cada requisição para o controller correto.
+- **controllers/**: camada que concentra a lógica de cada recurso, como validações, filtros, busca de produtos, cálculo de carrinho e retorno das respostas JSON.
+- **data/** e arquivos de dados em memória: simulam uma base de dados temporária durante a fase inicial do projeto.
+- **middlewares/**: camada preparada para comportamentos intermediários, como autenticação via JWT.
+
+No estágio atual, a API trabalha com dados em memória, sem banco de dados real. Isso facilita o desenvolvimento inicial e os testes dos fluxos principais antes da introdução de ORM, persistência e autenticação completa nas próximas sprints.
 
 ---
 
 ## 🔧 Tecnologias
 
-> *A ser preenchido na Sprint 2.*
+- **Node.js 18+**: ambiente de execução JavaScript no backend.
+- **Express.js**: framework utilizado para criação da API REST.
+- **CORS**: middleware para permitir requisições entre frontend e backend em ambientes diferentes.
+- **JSON**: formato padrão de entrada e saída de dados da API.
+- **bcryptjs**: biblioteca prevista/utilizada para criptografia de senhas de usuários.
+- **jsonwebtoken**: biblioteca prevista/utilizada para autenticação com tokens JWT.
+- **Nodemon**: ferramenta de apoio ao desenvolvimento para reiniciar o servidor automaticamente.
+- **Prettier**: ferramenta para padronização da formatação do código.
+- **OpenAPI 3.1**: padrão adotado para documentação progressiva dos endpoints da API.
 
 ---
 
 ## ⚙️ Como Executar Localmente
 
-> *A ser preenchido na Sprint 2.*
+### Pré-requisitos
 
----
+Antes de executar o projeto, é necessário ter instalado:
 
-## 📡 Endpoints da API ⬅️ (esboço inicial)
+- Node.js 18 ou superior
+- npm
+- Git
 
-| Verbo | Path | RF | Status esperado |
-|-------|------|----|-----------------|
-| GET | /api/v1/catalogo/home | RF-01 | 200 |
-| GET | /api/v1/produtos?search=lampada | RF-02 | 200 |
-| GET | /api/v1/categorias/{slug}/produtos | RF-03 | 200, 404 |
-| GET | /api/v1/produtos/{id} | RF-04 | 200, 404 |
-| GET | /api/v1/produtos/{id}/avaliacoes | RF-05 | 200 |
-| POST | /api/v1/produtos/{id}/avaliacoes | RF-06 | 201, 400 |
-| POST | /api/v1/carrinho/itens | RF-07 | 201 |
-| GET | /api/v1/carrinho | RF-08 | 200 |
-| PATCH | /api/v1/carrinho/itens/{itemId} | RF-08 | 200, 404 |
-| DELETE | /api/v1/carrinho/itens/{itemId} | RF-08 | 204, 404 |
-| POST | /api/v1/checkout/entrega | RF-09 | 201, 400 |
-| POST | /api/v1/cupons/aplicacoes | RF-10 | 200, 400, 404 |
-| GET | /api/v1/checkout/fretes?cep=00000-000 | RF-11 | 200, 400 |
-| POST | /api/v1/checkout/pagamento | RF-12 | 200, 201, 400 |
-| POST | /api/v1/pedidos | RF-13 | 201, 400, 422 |
-| GET | /api/v1/pedidos/{pedidoId} | RF-14 | 200, 404 |
-| GET | /api/v1/usuarios/me | RF-15 | 200, 401 |
-| PATCH | /api/v1/usuarios/me | RF-15 | 200, 204, 400, 401 |
-| POST | /api/v1/suporte/solicitacoes | RF-16 | 201, 400 |
-| GET | /api/v1/notificacoes | RF-17 | 200, 401 |
+### Passo a passo
 
+1. Clone o repositório:
 
----
-
-## 📚 Documentação OpenAPI
-
-> Arquivo em [`docs/openapi.yaml`](./docs/openapi.yaml) — a ser preenchido progressivamente.
-
----
-
-## 🗂️ Estrutura do Repositório
-
-```
-bulbe-energia-api/
-├── docs/
-│   ├── requisitos.md
-│   └── openapi.yaml
-├── src/
-│   ├── controllers/
-│   ├── models/
-│   ├── routes/
-│   └── services/
-├── tests/
-├── .gitignore
-├── package.json
-└── README.md
+```bash
+git clone https://github.com/italloferreira/bulbe-energia-api-grupo1.git
 ```
 
----
+2. Acesse a pasta do projeto:
 
-## 🔄 Sprints
-
-| Sprint | Foco | Status |
-|--------|------|--------|
-| Kickoff | Apresentação dos trabalhos do semestre anterior | ✅ Concluída |
-| Sprint 1 | Setup + Elicitação de Requisitos | 🔄 Em andamento |
-| Sprint 2 | Modelagem + Arquitetura + CRUD básico | ⏳ Aguardando |
-| Sprint 3 | Banco de Dados + ORM + Testes | ⏳ Aguardando |
-| Sprint 4 | Autenticação + Documentação Final | ⏳ Aguardando |
-
----
-
-## 📖 Referências
-
-- SOMMERVILLE, I. *Software Engineering*. 10. ed. Pearson, 2015.
-- FOWLER, M. *Patterns of Enterprise Application Architecture*. Addison-Wesley, 2002.
-- RICHARDSON, L.; RUBY, S. *RESTful Web Services*. O'Reilly, 2007.
-- OpenAPI Initiative. *OpenAPI Specification v3.1.0*. Disponível em: https://spec.openapis.org/oas/v3.1.0
-
----
-
-## 📄 Licença
-
-Distribuído sob a licença MIT. Consulte o arquivo [LICENSE](./LICENSE) para mais detalhes.
+```bash
+cd bulbe-energia-api-grupo1
 ```
 
----
+3. Instale as dependências:
 
+```bash
+npm install
+```
+
+4. Crie o arquivo `.env` com base no `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+Exemplo de configuração:
+
+```env
+PORT=3000
+JWT_SECRET=chave-secreta-dev
+```
+
+5. Execute a aplicação:
+
+```bash
+npm start
+```
+
+Ou, em ambiente de desenvolvimento:
+
+```bash
+npm run dev
+```
+
+6. Acesse a API no navegador ou em uma ferramenta como Postman/Insomnia:
+
+```text
+http://localhost:3000
+```
+
+Resposta esperada:
+
+```json
+{
+  "mensagem": "API Bulbe Energia funcionando!"
+}
+```
+
+### Exemplos de rotas disponíveis no estágio atual
+
+```text
+GET    /api/v1/catalogo/home
+GET    /api/v1/produtos
+GET    /api/v1/produtos?search=lampada
+GET    /api/v1/produtos/destaques
+GET    /api/v1/produtos/ofertas
+GET    /api/v1/produtos/categoria/casa
+GET    /api/v1/produtos/1
+GET    /api/v1/carrinho
+POST   /api/v1/carrinho/itens
+PATCH  /api/v1/carrinho/itens/1
+DELETE /api/v1/carrinho/itens/1
+```
+
+> Observação: antes de executar, verifique se o caminho de importação dos produtos está correto no controller. No projeto atual, o arquivo de produtos está em `src/produtos.js`, então o import em `produtoController.js` deve apontar para `../produtos` ou o arquivo deve ser movido para `src/data/produtos.js`.

@@ -1,0 +1,756 @@
+openapi: 3.1.0
+
+info:
+  title: Bulbe Energia API
+  version: 1.0.0
+  description: |
+    Documentação progressiva da API Bulbe Energia.
+
+    Esta versão descreve os endpoints já presentes no código atual do projeto,
+    incluindo catálogo, produtos, categorias, ofertas, destaques e carrinho.
+
+    Observação: no código atual, alguns requisitos previstos em docs/requisitos.md
+    ainda não possuem rotas implementadas, como checkout, pedidos, suporte,
+    notificações e perfil do usuário.
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Servidor local de desenvolvimento
+
+tags:
+  - name: Catálogo
+    description: Endpoints relacionados à vitrine inicial da loja.
+  - name: Produtos
+    description: Consulta, busca, categorias, ofertas e destaques de produtos.
+  - name: Carrinho
+    description: Gerenciamento dos itens adicionados ao carrinho.
+
+paths:
+  /catalogo/home:
+    get:
+      tags:
+        - Catálogo
+      summary: Listar catálogo da página inicial
+      description: Retorna os produtos ativos disponíveis para exibição na home.
+      operationId: listarCatalogoHome
+      responses:
+        '200':
+          description: Catálogo retornado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  produtos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Produto'
+              example:
+                produtos:
+                  - id: 1
+                    nome: Lâmpada LED 12W
+                    descricaoLonga: Lâmpada LED econômica com alta durabilidade e baixo consumo de energia.
+                    galeriaImagens:
+                      - https://example.com/imagens/lampada1.jpg
+                      - https://example.com/imagens/lampada2.jpg
+                    preco: 29.9
+                    desconto: 10
+                    destaque: true
+                    marca: Philips
+                    categoria: casa
+                    especificacoesTecnicas:
+                      potencia: 12W
+                      voltagem: 110V
+                      temperaturaCor: 6500K
+                    estoque: 120
+                    avaliacoesResumidas:
+                      media: 4.8
+                      total: 256
+                    ativo: true
+
+  /produtos:
+    get:
+      tags:
+        - Produtos
+      summary: Listar ou buscar produtos
+      description: Retorna produtos ativos. Quando o parâmetro search é informado, filtra os produtos pelo nome.
+      operationId: listarProdutos
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Termo usado para buscar produtos pelo nome.
+          schema:
+            type: string
+          example: lampada
+      responses:
+        '200':
+          description: Lista de produtos retornada com sucesso.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Produto'
+              example:
+                - id: 1
+                  nome: Lâmpada LED 12W
+                  descricaoLonga: Lâmpada LED econômica com alta durabilidade e baixo consumo de energia.
+                  galeriaImagens:
+                    - https://example.com/imagens/lampada1.jpg
+                  preco: 29.9
+                  desconto: 10
+                  destaque: true
+                  marca: Philips
+                  categoria: casa
+                  especificacoesTecnicas:
+                    potencia: 12W
+                    voltagem: 110V
+                    temperaturaCor: 6500K
+                  estoque: 120
+                  avaliacoesResumidas:
+                    media: 4.8
+                    total: 256
+                  ativo: true
+
+  /produtos/destaques:
+    get:
+      tags:
+        - Produtos
+      summary: Listar produtos em destaque
+      description: Retorna até 10 produtos ativos, em estoque e marcados como destaque.
+      operationId: listarDestaques
+      responses:
+        '200':
+          description: Produtos em destaque retornados com sucesso.
+          headers:
+            Cache-Control:
+              description: Cache público configurado por 300 segundos.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Produto'
+
+  /produtos/ofertas:
+    get:
+      tags:
+        - Produtos
+      summary: Listar produtos em oferta
+      description: Retorna até 10 produtos ativos, em estoque e com desconto maior que zero.
+      operationId: listarOfertas
+      responses:
+        '200':
+          description: Produtos em oferta retornados com sucesso.
+          headers:
+            Cache-Control:
+              description: Cache público configurado por 300 segundos.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Produto'
+
+  /produtos/categoria/{categoria}:
+    get:
+      tags:
+        - Produtos
+      summary: Listar produtos por categoria
+      description: |
+        Lista produtos ativos por categoria, com suporte a paginação e ordenação.
+
+        Categorias aceitas no código atual: casa, eletronicos, eletrodomesticos e ofertas.
+      operationId: listarPorCategoria
+      parameters:
+        - name: categoria
+          in: path
+          required: true
+          description: Slug da categoria.
+          schema:
+            type: string
+            enum:
+              - casa
+              - eletronicos
+              - eletrodomesticos
+              - ofertas
+          example: casa
+        - name: pagina
+          in: query
+          required: false
+          description: Número da página desejada.
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          example: 1
+        - name: limite
+          in: query
+          required: false
+          description: Quantidade de produtos por página.
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+          example: 20
+        - name: ordenar_por
+          in: query
+          required: false
+          description: Critério de ordenação.
+          schema:
+            type: string
+            enum:
+              - preco_asc
+              - preco_desc
+              - mais_vendidos
+              - novidades
+          example: preco_asc
+      responses:
+        '200':
+          description: Produtos da categoria retornados com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProdutosPaginados'
+              example:
+                categoria: casa
+                paginacao:
+                  paginaAtual: 1
+                  limite: 20
+                  total: 1
+                  totalPaginas: 1
+                produtos:
+                  - id: 1
+                    nome: Lâmpada LED 12W
+                    preco: 29.9
+                    precoComDesconto: 26.91
+                    imagemPrincipal: https://example.com/imagens/lampada1.jpg
+                    categoria: casa
+                    estoqueDisponivel: 120
+        '400':
+          description: Valor inválido para o parâmetro ordenar_por.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroOrdenacao'
+        '404':
+          description: Categoria não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroCategoria'
+
+  /produtos/{id}:
+    get:
+      tags:
+        - Produtos
+      summary: Buscar produto por ID
+      description: Retorna os dados completos de um produto ativo. Produtos inativos só são retornados quando o header x-admin for true.
+      operationId: buscarProdutoPorId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador do produto.
+          schema:
+            type: integer
+          example: 1
+        - name: x-admin
+          in: header
+          required: false
+          description: Permite visualizar produto inativo quando definido como true.
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+          example: 'false'
+      responses:
+        '200':
+          description: Produto encontrado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProdutoDetalhado'
+        '404':
+          description: Produto não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Produto não encontrado
+
+  /carrinho:
+    get:
+      tags:
+        - Carrinho
+      summary: Visualizar carrinho
+      description: Retorna os itens do carrinho em memória, com totais calculados.
+      operationId: visualizarCarrinho
+      responses:
+        '200':
+          description: Carrinho retornado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrinho'
+              example:
+                itens:
+                  - itemId: 1
+                    produtoId: 1
+                    nome: Lâmpada LED 12W
+                    preco: 29.9
+                    desconto: 10
+                    quantidade: 2
+                    subtotal: 53.82
+                    indisponivel: false
+                quantidadeItens: 2
+                subtotal: 53.82
+                totalEstimado: 53.82
+
+  /carrinho/itens:
+    post:
+      tags:
+        - Carrinho
+      summary: Adicionar item ao carrinho
+      description: Adiciona um produto ativo ao carrinho ou incrementa sua quantidade caso o item já exista para o mesmo usuário.
+      operationId: adicionarItemCarrinho
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdicionarItemCarrinhoRequest'
+            example:
+              produtoId: 1
+              quantidade: 1
+              usuarioId: 1
+      responses:
+        '201':
+          description: Item adicionado ao carrinho com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrinho'
+        '400':
+          description: Dados obrigatórios ausentes ou quantidade inválida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              examples:
+                camposObrigatorios:
+                  value:
+                    erro: produtoId, quantidade e usuarioId são obrigatórios
+                quantidadeInvalida:
+                  value:
+                    erro: quantidade deve ser um inteiro positivo
+        '404':
+          description: Produto não encontrado ou inativo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Produto não encontrado
+        '409':
+          description: Quantidade solicitada excede o estoque disponível.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Quantidade solicitada excede o estoque disponível
+
+  /carrinho/itens/{itemId}:
+    patch:
+      tags:
+        - Carrinho
+      summary: Atualizar quantidade de item do carrinho
+      description: Atualiza a quantidade de um item. Quando quantidade for 0, o item é removido do carrinho.
+      operationId: atualizarItemCarrinho
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: Identificador do item no carrinho.
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AtualizarItemCarrinhoRequest'
+            example:
+              quantidade: 3
+      responses:
+        '200':
+          description: Quantidade atualizada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrinho'
+        '400':
+          description: Quantidade inválida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: quantidade deve ser um inteiro maior ou igual a 0
+        '404':
+          description: Item não encontrado no carrinho.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Item não encontrado no carrinho
+        '409':
+          description: Quantidade solicitada excede o estoque disponível.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Quantidade solicitada excede o estoque disponível
+
+    delete:
+      tags:
+        - Carrinho
+      summary: Remover item do carrinho
+      description: Remove um item do carrinho quando o usuarioId informado pertence ao item.
+      operationId: removerItemCarrinho
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: Identificador do item no carrinho.
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoverItemCarrinhoRequest'
+            example:
+              usuarioId: 1
+      responses:
+        '204':
+          description: Item removido com sucesso. Sem corpo de resposta.
+        '403':
+          description: Usuário não autorizado a remover este item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Forbidden
+        '404':
+          description: Item não encontrado no carrinho.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Item não encontrado no carrinho
+
+components:
+  schemas:
+    Produto:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: Lâmpada LED 12W
+        descricaoLonga:
+          type: string
+          example: Lâmpada LED econômica com alta durabilidade e baixo consumo de energia.
+        galeriaImagens:
+          type: array
+          items:
+            type: string
+            format: uri
+          example:
+            - https://example.com/imagens/lampada1.jpg
+        preco:
+          type: number
+          format: double
+          example: 29.9
+        desconto:
+          type: number
+          format: double
+          example: 10
+        destaque:
+          type: boolean
+          example: true
+        marca:
+          type: string
+          example: Philips
+        categoria:
+          type: string
+          example: casa
+        especificacoesTecnicas:
+          type: object
+          additionalProperties: true
+          example:
+            potencia: 12W
+            voltagem: 110V
+            temperaturaCor: 6500K
+        estoque:
+          type: integer
+          example: 120
+        avaliacoesResumidas:
+          $ref: '#/components/schemas/AvaliacoesResumidas'
+        ativo:
+          type: boolean
+          example: true
+
+    ProdutoDetalhado:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: Lâmpada LED 12W
+        descricaoLonga:
+          type: string
+          example: Lâmpada LED econômica com alta durabilidade e baixo consumo de energia.
+        galeriaImagens:
+          type: array
+          items:
+            type: string
+            format: uri
+        preco:
+          type: number
+          format: double
+          example: 29.9
+        desconto:
+          type: number
+          format: double
+          example: 10
+        marca:
+          type: string
+          example: Philips
+        categoria:
+          type: string
+          example: casa
+        especificacoesTecnicas:
+          type: object
+          additionalProperties: true
+        estoque:
+          type: integer
+          example: 120
+        avaliacoesResumidas:
+          $ref: '#/components/schemas/AvaliacoesResumidas'
+
+    AvaliacoesResumidas:
+      type: object
+      properties:
+        media:
+          type: number
+          format: double
+          example: 4.8
+        total:
+          type: integer
+          example: 256
+
+    ProdutoCategoriaResumo:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: Lâmpada LED 12W
+        preco:
+          type: number
+          format: double
+          example: 29.9
+        precoComDesconto:
+          type: number
+          format: double
+          example: 26.91
+        imagemPrincipal:
+          type:
+            - string
+            - 'null'
+          format: uri
+          example: https://example.com/imagens/lampada1.jpg
+        categoria:
+          type: string
+          example: casa
+        estoqueDisponivel:
+          type: integer
+          example: 120
+
+    ProdutosPaginados:
+      type: object
+      properties:
+        categoria:
+          type: string
+          example: casa
+        paginacao:
+          $ref: '#/components/schemas/Paginacao'
+        produtos:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProdutoCategoriaResumo'
+
+    Paginacao:
+      type: object
+      properties:
+        paginaAtual:
+          type: integer
+          example: 1
+        limite:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 1
+        totalPaginas:
+          type: integer
+          example: 1
+
+    Carrinho:
+      type: object
+      properties:
+        itens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemCarrinho'
+        quantidadeItens:
+          type: integer
+          example: 2
+        subtotal:
+          type: number
+          format: double
+          example: 53.82
+        totalEstimado:
+          type: number
+          format: double
+          example: 53.82
+
+    ItemCarrinho:
+      type: object
+      properties:
+        itemId:
+          type: integer
+          example: 1
+        produtoId:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: Lâmpada LED 12W
+        preco:
+          type: number
+          format: double
+          example: 29.9
+        desconto:
+          type: number
+          format: double
+          example: 10
+        quantidade:
+          type: integer
+          example: 2
+        subtotal:
+          type: number
+          format: double
+          example: 53.82
+        indisponivel:
+          type: boolean
+          example: false
+
+    AdicionarItemCarrinhoRequest:
+      type: object
+      required:
+        - produtoId
+        - quantidade
+        - usuarioId
+      properties:
+        produtoId:
+          type: integer
+          example: 1
+        quantidade:
+          type: integer
+          minimum: 1
+          example: 1
+        usuarioId:
+          type: integer
+          example: 1
+
+    AtualizarItemCarrinhoRequest:
+      type: object
+      required:
+        - quantidade
+      properties:
+        quantidade:
+          type: integer
+          minimum: 0
+          example: 3
+
+    RemoverItemCarrinhoRequest:
+      type: object
+      required:
+        - usuarioId
+      properties:
+        usuarioId:
+          type: integer
+          example: 1
+
+    Erro:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: Mensagem de erro
+
+    ErroCategoria:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: Categoria 'moveis' não encontrada.
+        categoriasDisponiveis:
+          type: array
+          items:
+            type: string
+          example:
+            - casa
+            - eletronicos
+            - eletrodomesticos
+            - ofertas
+
+    ErroOrdenacao:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Valor de ordenar_por inválido: 'menor_preco'."
+        valoresPermitidos:
+          type: array
+          items:
+            type: string
+          example:
+            - preco_asc
+            - preco_desc
+            - mais_vendidos
+            - novidades
