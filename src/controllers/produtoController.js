@@ -1,4 +1,4 @@
-const produtos = require('../data/produtos');
+const produtos = require('../data/data');
  
 // Categorias válidas (slugs)
 const CATEGORIAS_VALIDAS = [
