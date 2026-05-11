@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const s = 'Painel Solar'; const n = s.normalize\\('NFD'\\).replace\\(/[̀-ͯ]/g, ''\\).toLowerCase\\(\\); console.log\\(n\\);\")",
+      "PowerShell(node -e \"const s = 'Painel Sol�r'; const n = s.normalize\\('NFD'\\).replace\\(/['-?]/g, ''\\).toLowerCase\\(\\); console.log\\(n\\);\")",
+      "PowerShell(Get-Command node, npm, npx 2>$null)",
+      "Bash(git -C \"e:\\\\bulbe-energia-api-grupo1\" status)",
+      "Bash(git -C \"e:\\\\bulbe-energia-api-grupo1\" diff)",
+      "Bash(git -C \"e:\\\\bulbe-energia-api-grupo1\" log --oneline -5)",
+      "Bash(git -C \"e:\\\\bulbe-energia-api-grupo1\" add src/controllers/produtoController.js src/routes/produtoRoute.js)",
+      "Bash(git -C 'e:\\\\bulbe-energia-api-grupo1' commit -m ' *)"
+    ]
+  }
+}
