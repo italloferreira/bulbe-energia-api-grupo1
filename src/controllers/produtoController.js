@@ -1,47 +1,98 @@
 const produtos = require('../produtos');
 
-// RF-01 · Catálogo home
-function listarCatalogoHome(req, res) {
+const carrinho = require('../data/data');
 
-  const produtosAtivos = produtos.filter(
-    p => p.ativo
-  );
+function getCarrinhoFormatado() {
 
-  res.json({
-    produtos: produtosAtivos
-  });
-}
+  const itensFormatados = carrinho.itens.map(item => {
 
-// RF-02 · Buscar produtos
-function listarProdutos(req, res) {
-
-  const { search } = req.query;
-
-  const lista = produtos.filter(
-    p => p.ativo
-  );
-
-  if (search) {
-
-    const termo = search.toLowerCase();
-
-    const resultado = lista.filter(
-      p => p.nome.toLowerCase().includes(termo)
+    const produtoAtual = produtos.find(
+      p => p.id === item.produtoId
     );
 
-    return res.json(resultado);
-  }
+    if (!produtoAtual || !produtoAtual.ativo) {
 
-  res.json(lista);
+      return {
+        itemId: item.itemId,
+        produtoId: item.produtoId,
+        nome: item.nome,
+        quantidade: item.quantidade,
+        indisponivel: true
+      };
+    }
+
+    const precoAtual = produtoAtual.preco;
+
+    const precoComDesconto =
+      precoAtual * (1 - produtoAtual.desconto / 100);
+
+    return {
+      itemId: item.itemId,
+
+      produtoId: item.produtoId,
+
+      nome: produtoAtual.nome,
+
+      preco: precoAtual,
+
+      desconto: produtoAtual.desconto,
+
+      quantidade: item.quantidade,
+
+      subtotal: parseFloat(
+        (precoComDesconto * item.quantidade).toFixed(2)
+      ),
+
+      indisponivel: false
+    };
+  });
+
+  const subtotal = itensFormatados.reduce((acc, item) => {
+
+    if (item.indisponivel) {
+      return acc;
+    }
+
+    return acc + item.subtotal;
+
+  }, 0);
+
+  return {
+
+    itens: itensFormatados,
+
+    quantidadeItens: itensFormatados.reduce(
+      (acc, item) => acc + item.quantidade,
+      0
+    ),
+
+    subtotal: parseFloat(subtotal.toFixed(2)),
+
+    totalEstimado: parseFloat(subtotal.toFixed(2))
+  };
 }
 
-// RF-04 · Produto por ID
-function buscarProdutoPorId(req, res) {
+// RF-07 · Adicionar item ao carrinho
+function adicionarItem(req, res) {
 
-  const id = parseInt(req.params.id);
+  const { produtoId, quantidade, usuarioId } = req.body;
+
+  if (!produtoId || !quantidade || !usuarioId) {
+
+    return res.status(400).json({
+      erro: 'produtoId, quantidade e usuarioId são obrigatórios'
+    });
+  }
+
+  if (!Number.isInteger(quantidade) || quantidade <= 0) {
+
+    return res.status(400).json({
+      erro: 'quantidade deve ser um inteiro positivo'
+    });
+  }
 
   const produto = produtos.find(
-    p => p.id === id
+    p => p.id === produtoId && p.ativo
   );
 
   if (!produto) {
@@ -51,74 +102,152 @@ function buscarProdutoPorId(req, res) {
     });
   }
 
-  const isAdmin =
-    req.headers['x-admin'] === 'true';
+  const itemExistente = carrinho.itens.find(
+    i =>
+      i.produtoId === produtoId &&
+      i.usuarioId === usuarioId
+  );
 
-  if (!produto.ativo && !isAdmin) {
+  const qtdAtual = itemExistente
+    ? itemExistente.quantidade
+    : 0;
 
-    return res.status(404).json({
-      erro: 'Produto não encontrado'
+  if (qtdAtual + quantidade > produto.estoque) {
+
+    return res.status(409).json({
+      erro: 'Quantidade solicitada excede o estoque disponível'
     });
   }
 
-  return res.json({
-    id: produto.id,
-    nome: produto.nome,
-    descricaoLonga: produto.descricaoLonga,
-    galeriaImagens: produto.galeriaImagens,
-    preco: produto.preco,
-    desconto: produto.desconto,
-    marca: produto.marca,
-    especificacoesTecnicas:
-      produto.especificacoesTecnicas,
-    estoque: produto.estoque,
-    avaliacoesResumidas:
-      produto.avaliacoesResumidas
-  });
+  if (itemExistente) {
+
+    itemExistente.quantidade += quantidade;
+
+  } else {
+
+    carrinho.itens.push({
+      itemId: carrinho._proximoId++,
+
+      usuarioId,
+
+      produtoId: produto.id,
+
+      nome: produto.nome,
+
+      preco: produto.preco,
+
+      desconto: produto.desconto,
+
+      quantidade
+    });
+  }
+
+  return res.status(201).json(
+    getCarrinhoFormatado()
+  );
 }
 
-// RF · Produtos em destaque
-function listarDestaques(req, res) {
+// RF-08 · Visualizar carrinho
+function visualizarCarrinho(req, res) {
 
-  const destaques = produtos
-    .filter(p =>
-      p.destaque &&
-      p.ativo &&
-      p.estoque > 0
-    )
-    .slice(0, 10);
-
-  res.set(
-    'Cache-Control',
-    'public, max-age=300'
+  res.json(
+    getCarrinhoFormatado()
   );
-
-  res.json(destaques);
 }
 
-// RF · Produtos em oferta
-function listarOfertas(req, res) {
+// RF-08 · Atualizar quantidade
+function atualizarItem(req, res) {
 
-  const ofertas = produtos
-    .filter(p =>
-      p.desconto > 0 &&
-      p.ativo &&
-      p.estoque > 0
-    )
-    .slice(0, 10);
+  const itemId = parseInt(req.params.itemId);
 
-  res.set(
-    'Cache-Control',
-    'public, max-age=300'
+  const { quantidade } = req.body;
+
+  if (
+    quantidade === undefined ||
+    !Number.isInteger(quantidade) ||
+    quantidade < 0
+  ) {
+
+    return res.status(400).json({
+      erro: 'quantidade deve ser um inteiro maior ou igual a 0'
+    });
+  }
+
+  const index = carrinho.itens.findIndex(
+    i => i.itemId === itemId
   );
 
-  res.json(ofertas);
+  if (index === -1) {
+
+    return res.status(404).json({
+      erro: 'Item não encontrado no carrinho'
+    });
+  }
+
+  if (quantidade === 0) {
+
+    carrinho.itens.splice(index, 1);
+
+    return res.json(
+      getCarrinhoFormatado()
+    );
+  }
+
+  const item = carrinho.itens[index];
+
+  const produto = produtos.find(
+    p => p.id === item.produtoId
+  );
+
+  if (quantidade > produto.estoque) {
+
+    return res.status(409).json({
+      erro: 'Quantidade solicitada excede o estoque disponível'
+    });
+  }
+
+  item.quantidade = quantidade;
+
+  return res.json(
+    getCarrinhoFormatado()
+  );
+}
+
+// RF-08 · Remover item
+function removerItem(req, res) {
+
+  const itemId = parseInt(req.params.itemId);
+
+  const { usuarioId } = req.body;
+
+  const index = carrinho.itens.findIndex(
+    i => i.itemId === itemId
+  );
+
+  if (index === -1) {
+
+    return res.status(404).json({
+      erro: 'Item não encontrado no carrinho'
+    });
+  }
+
+  const item = carrinho.itens[index];
+
+  if (item.usuarioId !== usuarioId) {
+
+    return res.status(403).json({
+      erro: 'Forbidden'
+    });
+  }
+
+  carrinho.itens.splice(index, 1);
+
+  return res.status(204).send();
 }
 
 module.exports = {
-  listarCatalogoHome,
-  listarProdutos,
-  buscarProdutoPorId,
-  listarDestaques,
-  listarOfertas
+  adicionarItem,
+  visualizarCarrinho,
+  atualizarItem,
+  removerItem
 };
