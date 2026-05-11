@@ -75,6 +75,8 @@ function getCarrinhoFormatado() {
 // RF-07 · Adicionar item ao carrinho
 function adicionarItem(req, res) {
 
+  console.log(req.body);
+
   const { produtoId, quantidade, usuarioId } = req.body;
 
   if (!produtoId || !quantidade || !usuarioId) {
@@ -218,8 +220,7 @@ function removerItem(req, res) {
 
   const itemId = parseInt(req.params.itemId);
 
-  const { usuarioId } = req.body;
-
+  const usuarioId = req.body?.usuarioId;
   const index = carrinho.itens.findIndex(
     i => i.itemId === itemId
   );
