@@ -75,12 +75,12 @@ function getCarrinhoFormatado() {
 // RF-07 · Adicionar item ao carrinho
 function adicionarItem(req, res) {
 
-  const { produtoId, quantidade } = req.body;
+  const { produtoId, quantidade, usuarioId } = req.body;
 
-  if (!produtoId || !quantidade) {
+  if (!produtoId || !quantidade || !usuarioId) {
 
     return res.status(400).json({
-      erro: 'produtoId e quantidade são obrigatórios'
+      erro: 'produtoId, quantidade e usuarioId são obrigatórios'
     });
   }
 
@@ -103,7 +103,9 @@ function adicionarItem(req, res) {
   }
 
   const itemExistente = carrinho.itens.find(
-    i => i.produtoId === produtoId
+    i =>
+      i.produtoId === produtoId &&
+      i.usuarioId === usuarioId
   );
 
   const qtdAtual = itemExistente
@@ -125,10 +127,17 @@ function adicionarItem(req, res) {
 
     carrinho.itens.push({
       itemId: carrinho._proximoId++,
+
+      usuarioId,
+
       produtoId: produto.id,
+
       nome: produto.nome,
+
       preco: produto.preco,
+
       desconto: produto.desconto,
+
       quantidade
     });
   }
@@ -209,6 +218,8 @@ function removerItem(req, res) {
 
   const itemId = parseInt(req.params.itemId);
 
+  const { usuarioId } = req.body;
+
   const index = carrinho.itens.findIndex(
     i => i.itemId === itemId
   );
@@ -217,6 +228,15 @@ function removerItem(req, res) {
 
     return res.status(404).json({
       erro: 'Item não encontrado no carrinho'
+    });
+  }
+
+  const item = carrinho.itens[index];
+
+  if (item.usuarioId !== usuarioId) {
+
+    return res.status(403).json({
+      erro: 'Forbidden'
     });
   }
 
