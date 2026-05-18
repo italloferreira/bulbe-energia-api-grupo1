@@ -15,6 +15,8 @@ app.use('/api/v1', produtosRoutes);
 
 app.use('/api/v1', carrinhoRoutes);
 
+app.use('/api/v1', usuariosRoutes);
+
 app.get('/', (req, res) => {
   res.json({ mensagem: 'API Bulbe Energia funcionando!' });
 });
