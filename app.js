@@ -2,6 +2,7 @@ const express = require('express');
 
 const produtosRoutes = require('./src/routes/produtoRoute');
 const carrinhoRoutes = require('./src/routes/carrinhoRoute');
+const usuariosRoutes = require('./src/routes/usuarioRoute');
 
 const cors = require('cors');
 
