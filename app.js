@@ -1,5 +1,6 @@
 const express = require('express');
 
+const pedidosRoutes = require('./src/routes/pedidoRoute');
 const freteRoutes = require('./src/routes/freteRoute');
 const produtosRoutes = require('./src/routes/produtoRoute');
 const carrinhoRoutes = require('./src/routes/carrinhoRoute');
@@ -13,6 +14,7 @@ const PORT = 3000;
 app.use(express.json());
 app.use(cors());
 
+app.use('/api/pedidos', pedidosRoutes);
 app.use('/api/frete', freteRoutes);
 app.use('/api/v1', produtosRoutes);
 app.use('/api/v1', carrinhoRoutes);
