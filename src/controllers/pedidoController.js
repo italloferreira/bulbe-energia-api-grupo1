@@ -1,21 +1,20 @@
-// src/controllers/pedidoController.js
-// RF-13 · Finalização do pedido de compra
-//
-// História: como cliente, quero finalizar a compra e gerar um pedido,
-// para poder pagar e receber meus produtos.
 
 const produtos = require('../produtos');
 const carrinho = require('../data/data');
 const pedidos = require('../data/pedidos');
 
-// Métodos de pagamento aceitos.
 const METODOS_PAGAMENTO = ['pix', 'cartao', 'boleto'];
 
-// Tipos de frete aceitos (alinhados ao freteController · RF-11).
 const TIPOS_FRETE = ['padrao', 'expressa'];
 
-// Cupons promocionais disponíveis (tabela de demonstração).
-// Quando a RF-10 de cupons for implementada, esta tabela vira a fonte real.
+const STATUS_VALIDOS = [
+  'aguardando_pagamento',
+  'pago',
+  'enviado',
+  'entregue',
+  'cancelado'
+];
+
 const CUPONS = {
   BULBE10: { tipo: 'percentual', valor: 10 },
   BULBE20: { tipo: 'percentual', valor: 20 },
@@ -24,7 +23,6 @@ const CUPONS = {
 
 // --- Helpers -----------------------------------------------------------------
 
-// Valida o endereço de entrega. Retorna a mensagem de erro, ou null se ok.
 function validarEndereco(endereco) {
   if (!endereco || typeof endereco !== 'object' || Array.isArray(endereco)) {
     return 'enderecoEntrega é obrigatório';
@@ -54,9 +52,6 @@ function validarEndereco(endereco) {
   return null;
 }
 
-// TRANSAÇÃO · reserva (decrementa) o estoque de todos os itens.
-// Se algum item não tiver estoque suficiente, desfaz as reservas já
-// aplicadas e devolve o item problemático.
 function reservarEstoque(itensPedido) {
   const reservados = [];
 
@@ -76,11 +71,24 @@ function reservarEstoque(itensPedido) {
   return { ok: true };
 }
 
+function parseDataInicio(str) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) return null;
+  const d = new Date(`${str}T00:00:00.000Z`);
+  return isNaN(d.getTime()) ? null : d.getTime();
+}
+
+// Converte uma data AAAA-MM-DD no fim do dia (UTC). null se inválida.
+function parseDataFim(str) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) return null;
+  const d = new Date(`${str}T23:59:59.999Z`);
+  return isNaN(d.getTime()) ? null : d.getTime();
+}
+
 // --- Controller --------------------------------------------------------------
 
-// RF-13 · POST /api/pedidos
 function criarPedido(req, res) {
   const {
+    usuarioId,
     itens,
     enderecoEntrega,
     frete,
@@ -88,20 +96,24 @@ function criarPedido(req, res) {
     metodoPagamento
   } = req.body || {};
 
-  // 1. Itens.
+  if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+    return res.status(400).json({
+      erro: 'usuarioId é obrigatório e deve ser um inteiro positivo'
+    });
+  }
+
+  
   if (!Array.isArray(itens) || itens.length === 0) {
     return res.status(400).json({
       erro: 'itens deve ser uma lista com ao menos um item'
     });
   }
 
-  // 2. Endereço de entrega.
   const erroEndereco = validarEndereco(enderecoEntrega);
   if (erroEndereco) {
     return res.status(400).json({ erro: erroEndereco });
   }
 
-  // 3. Opção de frete escolhida.
   if (
     !frete ||
     !TIPOS_FRETE.includes(frete.tipo) ||
@@ -113,14 +125,12 @@ function criarPedido(req, res) {
     });
   }
 
-  // 4. Método de pagamento.
   if (!metodoPagamento || !METODOS_PAGAMENTO.includes(metodoPagamento)) {
     return res.status(400).json({
       erro: `metodoPagamento inválido. Valores aceitos: ${METODOS_PAGAMENTO.join(', ')}`
     });
   }
 
-  // 5. Resolve o produto de cada item do carrinho.
   const itensPedido = [];
   for (const item of itens) {
     const produtoId = item?.produtoId ?? item?.id;
@@ -147,7 +157,6 @@ function criarPedido(req, res) {
     itensPedido.push({ produto, quantidade });
   }
 
-  // 6. Cupom (opcional).
   let cupomAplicado = null;
   if (cupom !== undefined && cupom !== null && String(cupom).trim() !== '') {
     const codigo = String(cupom).trim().toUpperCase();
@@ -158,7 +167,6 @@ function criarPedido(req, res) {
     cupomAplicado = { codigo, ...dados };
   }
 
-  // 7. TRANSAÇÃO · reserva o estoque (decrementa) com rollback em caso de falha.
   const reserva = reservarEstoque(itensPedido);
   if (!reserva.ok) {
     return res.status(409).json({
@@ -168,7 +176,6 @@ function criarPedido(req, res) {
     });
   }
 
-  // 8. Cálculo dos totais.
   let subtotalProdutos = 0;
   const itensFormatados = itensPedido.map(({ produto, quantidade }) => {
     const precoUnitario = Number(
@@ -203,10 +210,10 @@ function criarPedido(req, res) {
     (subtotalProdutos - descontoCupom + valorFrete).toFixed(2)
   );
 
-  // 9. Cria o pedido com ID único e status inicial.
   const id = `PED-${String(pedidos._proximoId++).padStart(5, '0')}`;
   const pedido = {
     id,
+    usuarioId,
     status: 'aguardando_pagamento',
     criadoEm: new Date().toISOString(),
     itens: itensFormatados,
@@ -223,10 +230,110 @@ function criarPedido(req, res) {
   };
   pedidos.lista.push(pedido);
 
-  // 10. Esvazia o carrinho após o sucesso.
   carrinho.itens.length = 0;
 
   return res.status(201).json(pedido);
 }
 
-module.exports = { criarPedido };
+// RF-14 · GET /api/pedidos
+// Histórico de pedidos do usuário, com filtros opcionais e paginação.
+function listarPedidos(req, res) {
+  const { usuarioId, status, data_inicio, data_fim } = req.query;
+
+  const uid = Number(usuarioId);
+  if (!usuarioId || !Number.isInteger(uid) || uid <= 0) {
+    return res.status(400).json({
+      erro: 'usuarioId é obrigatório e deve ser um inteiro positivo'
+    });
+  }
+
+  // 2. Filtro de status (opcional).
+  if (status !== undefined && !STATUS_VALIDOS.includes(status)) {
+    return res.status(400).json({
+      erro: `status inválido. Valores aceitos: ${STATUS_VALIDOS.join(', ')}`
+    });
+  }
+
+  let inicioMs = null;
+  let fimMs = null;
+
+  if (data_inicio !== undefined) {
+    inicioMs = parseDataInicio(data_inicio);
+    if (inicioMs === null) {
+      return res.status(400).json({
+        erro: 'data_inicio inválida. Use o formato AAAA-MM-DD.'
+      });
+    }
+  }
+
+  if (data_fim !== undefined) {
+    fimMs = parseDataFim(data_fim);
+    if (fimMs === null) {
+      return res.status(400).json({
+        erro: 'data_fim inválida. Use o formato AAAA-MM-DD.'
+      });
+    }
+  }
+
+  if (inicioMs !== null && fimMs !== null && inicioMs > fimMs) {
+    return res.status(400).json({
+      erro: 'data_inicio não pode ser posterior a data_fim'
+    });
+  }
+
+  const pagina = req.query.pagina === undefined ? 1 : Number(req.query.pagina);
+  const limite = req.query.limite === undefined ? 10 : Number(req.query.limite);
+
+  if (!Number.isInteger(pagina) || pagina <= 0) {
+    return res.status(400).json({
+      erro: 'pagina deve ser um inteiro positivo'
+    });
+  }
+  if (!Number.isInteger(limite) || limite <= 0) {
+    return res.status(400).json({
+      erro: 'limite deve ser um inteiro positivo'
+    });
+  }
+
+  let lista = pedidos.lista.filter(p => p.usuarioId === uid);
+
+  if (status !== undefined) {
+    lista = lista.filter(p => p.status === status);
+  }
+  if (inicioMs !== null) {
+    lista = lista.filter(p => new Date(p.criadoEm).getTime() >= inicioMs);
+  }
+  if (fimMs !== null) {
+    lista = lista.filter(p => new Date(p.criadoEm).getTime() <= fimMs);
+  }
+
+  
+  lista.sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+
+  
+  const total = lista.length;
+  const totalPaginas = Math.ceil(total / limite);
+  const inicio = (pagina - 1) * limite;
+  const paginaAtual = lista.slice(inicio, inicio + limite);
+
+  // 8. Monta o resumo de cada pedido.
+  const resultado = paginaAtual.map(p => ({
+    id: p.id,
+    data: p.criadoEm,
+    status: p.status,
+    valorTotal: p.resumo.total,
+    quantidadeItens: p.itens.reduce((acc, i) => acc + i.quantidade, 0)
+  }));
+
+  return res.json({
+    paginacao: {
+      paginaAtual: pagina,
+      limite,
+      total,
+      totalPaginas
+    },
+    pedidos: resultado
+  });
+}
+
+module.exports = { criarPedido, listarPedidos };
