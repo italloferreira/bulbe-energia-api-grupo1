@@ -1,4 +1,3 @@
-
 const produtos = require('../produtos');
 const carrinho = require('../data/data');
 const pedidos = require('../data/pedidos');
@@ -20,8 +19,6 @@ const CUPONS = {
   BULBE20: { tipo: 'percentual', valor: 20 },
   FRETEGRATIS: { tipo: 'frete_gratis' }
 };
-
-// --- Helpers -----------------------------------------------------------------
 
 function validarEndereco(endereco) {
   if (!endereco || typeof endereco !== 'object' || Array.isArray(endereco)) {
@@ -57,7 +54,6 @@ function reservarEstoque(itensPedido) {
 
   for (const { produto, quantidade } of itensPedido) {
     if (produto.estoque < quantidade) {
-      // Rollback: devolve ao estoque tudo o que já havia sido reservado.
       for (const r of reservados) {
         r.produto.estoque += r.quantidade;
       }
@@ -77,14 +73,11 @@ function parseDataInicio(str) {
   return isNaN(d.getTime()) ? null : d.getTime();
 }
 
-// Converte uma data AAAA-MM-DD no fim do dia (UTC). null se inválida.
 function parseDataFim(str) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) return null;
   const d = new Date(`${str}T23:59:59.999Z`);
   return isNaN(d.getTime()) ? null : d.getTime();
 }
-
-// --- Controller --------------------------------------------------------------
 
 function criarPedido(req, res) {
   const {
@@ -102,7 +95,6 @@ function criarPedido(req, res) {
     });
   }
 
-  
   if (!Array.isArray(itens) || itens.length === 0) {
     return res.status(400).json({
       erro: 'itens deve ser uma lista com ao menos um item'
@@ -235,8 +227,6 @@ function criarPedido(req, res) {
   return res.status(201).json(pedido);
 }
 
-// RF-14 · GET /api/pedidos
-// Histórico de pedidos do usuário, com filtros opcionais e paginação.
 function listarPedidos(req, res) {
   const { usuarioId, status, data_inicio, data_fim } = req.query;
 
@@ -247,7 +237,6 @@ function listarPedidos(req, res) {
     });
   }
 
-  // 2. Filtro de status (opcional).
   if (status !== undefined && !STATUS_VALIDOS.includes(status)) {
     return res.status(400).json({
       erro: `status inválido. Valores aceitos: ${STATUS_VALIDOS.join(', ')}`
@@ -307,16 +296,13 @@ function listarPedidos(req, res) {
     lista = lista.filter(p => new Date(p.criadoEm).getTime() <= fimMs);
   }
 
-  
   lista.sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
 
-  
   const total = lista.length;
   const totalPaginas = Math.ceil(total / limite);
   const inicio = (pagina - 1) * limite;
   const paginaAtual = lista.slice(inicio, inicio + limite);
 
-  // 8. Monta o resumo de cada pedido.
   const resultado = paginaAtual.map(p => ({
     id: p.id,
     data: p.criadoEm,
@@ -336,4 +322,31 @@ function listarPedidos(req, res) {
   });
 }
 
-module.exports = { criarPedido, listarPedidos };
+function obterPedido(req, res) {
+  const { id } = req.params;
+  const usuarioId = Number(req.query.usuarioId);
+
+  if (!req.query.usuarioId || !Number.isInteger(usuarioId) || usuarioId <= 0) {
+    return res.status(400).json({
+      erro: 'usuarioId é obrigatório e deve ser um inteiro positivo'
+    });
+  }
+
+  const pedido = pedidos.lista.find(p => p.id === id);
+  if (!pedido) {
+    return res.status(404).json({ erro: `Pedido '${id}' não encontrado` });
+  }
+
+  if (pedido.usuarioId !== usuarioId) {
+    return res.status(403).json({
+      erro: 'Este pedido pertence a outro usuário'
+    });
+  }
+
+  return res.json({
+    ...pedido,
+    codigoRastreio: pedido.codigoRastreio ?? null
+  });
+}
+
+module.exports = { criarPedido, listarPedidos, obterPedido };
