@@ -80,20 +80,16 @@ function parseDataFim(str) {
 }
 
 function criarPedido(req, res) {
+  // Autorização: usuário vem do token JWT, não do body
+  const usuarioId = req.user.id;
+
   const {
-    usuarioId,
     itens,
     enderecoEntrega,
     frete,
     cupom,
     metodoPagamento
   } = req.body || {};
-
-  if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
-    return res.status(400).json({
-      erro: 'usuarioId é obrigatório e deve ser um inteiro positivo'
-    });
-  }
 
   if (!Array.isArray(itens) || itens.length === 0) {
     return res.status(400).json({
@@ -228,14 +224,10 @@ function criarPedido(req, res) {
 }
 
 function listarPedidos(req, res) {
-  const { usuarioId, status, data_inicio, data_fim } = req.query;
+  // Autorização: usuário vem do token JWT, não da query
+  const usuarioId = req.user.id;
 
-  const uid = Number(usuarioId);
-  if (!usuarioId || !Number.isInteger(uid) || uid <= 0) {
-    return res.status(400).json({
-      erro: 'usuarioId é obrigatório e deve ser um inteiro positivo'
-    });
-  }
+  const { status, data_inicio, data_fim } = req.query;
 
   if (status !== undefined && !STATUS_VALIDOS.includes(status)) {
     return res.status(400).json({
@@ -284,7 +276,7 @@ function listarPedidos(req, res) {
     });
   }
 
-  let lista = pedidos.lista.filter(p => p.usuarioId === uid);
+  let lista = pedidos.lista.filter(p => p.usuarioId === usuarioId);
 
   if (status !== undefined) {
     lista = lista.filter(p => p.status === status);
@@ -323,14 +315,9 @@ function listarPedidos(req, res) {
 }
 
 function obterPedido(req, res) {
+  // Autorização: usuário vem do token JWT, não da query
+  const usuarioId = req.user.id;
   const { id } = req.params;
-  const usuarioId = Number(req.query.usuarioId);
-
-  if (!req.query.usuarioId || !Number.isInteger(usuarioId) || usuarioId <= 0) {
-    return res.status(400).json({
-      erro: 'usuarioId é obrigatório e deve ser um inteiro positivo'
-    });
-  }
 
   const pedido = pedidos.lista.find(p => p.id === id);
   if (!pedido) {
@@ -350,15 +337,9 @@ function obterPedido(req, res) {
 }
 
 function cancelarPedido(req, res) {
+  // Autorização: usuário vem do token JWT, não da query
+  const usuarioId = req.user.id;
   const { id } = req.params;
-  const usuarioId = Number(req.query.usuarioId);
-
-  // Validar usuarioId
-  if (!req.query.usuarioId || !Number.isInteger(usuarioId) || usuarioId <= 0) {
-    return res.status(400).json({
-      erro: 'usuarioId é obrigatório e deve ser um inteiro positivo'
-    });
-  }
 
   // Buscar pedido
   const pedido = pedidos.lista.find(p => p.id === id);
@@ -392,8 +373,6 @@ function cancelarPedido(req, res) {
   // Se o pedido foi pago, processar reembolso
   let reembolsoProcessado = false;
   if (pedido.status === 'pago') {
-    // Simular disparo de processo de estorno via gateway
-    // Em uma aplicação real, isso chamaria a API do gateway de pagamento
     reembolsoProcessado = processarReembolsoGateway(pedido);
   }
 
@@ -406,7 +385,6 @@ function cancelarPedido(req, res) {
     pedido.dataReembolso = dataCancel;
   }
 
-  // Retornar pedido atualizado
   return res.json({
     mensagem: 'Pedido cancelado com sucesso',
     pedido: {
@@ -432,31 +410,11 @@ function cancelarPedido(req, res) {
   });
 }
 
-/**
- * Processa o reembolso via gateway de pagamento
- * Em uma aplicação real, isso faria requisições HTTP para a API do gateway
- * @param {Object} pedido - O pedido a ser reembolsado
- * @returns {boolean} - true se o reembolso foi processado com sucesso
- */
 function processarReembolsoGateway(pedido) {
   try {
-    // MOCK: Simular chamada ao gateway de pagamento
     console.log(`[GATEWAY] Processando reembolso para pedido ${pedido.id}`);
     console.log(`[GATEWAY] Valor: R$ ${pedido.resumo.total.toFixed(2)}`);
     console.log(`[GATEWAY] Método de pagamento: ${pedido.metodoPagamento}`);
-
-    // Em produção, faria algo como:
-    // const resposta = await fetch(`${GATEWAY_API_URL}/refund`, {
-    //   method: 'POST',
-    //   headers: { 'Authorization': `Bearer ${GATEWAY_TOKEN}` },
-    //   body: JSON.stringify({
-    //     pedidoId: pedido.id,
-    //     valor: pedido.resumo.total,
-    //     metodo: pedido.metodoPagamento
-    //   })
-    // });
-    // return resposta.ok;
-
     return true;
   } catch (erro) {
     console.error('[GATEWAY] Erro ao processar reembolso:', erro.message);

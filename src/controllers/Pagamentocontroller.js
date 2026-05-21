@@ -19,6 +19,9 @@ function expirarPagamento(pagamentoId) {
 }
 
 function criarPagamentoPix(req, res) {
+  // Autorização: usuário vem do token JWT
+  const usuarioId = req.user.id;
+
   const pedidoId = req.body?.pedido_id ?? req.body?.pedidoId;
 
   if (!pedidoId || typeof pedidoId !== 'string') {
@@ -31,6 +34,13 @@ function criarPagamentoPix(req, res) {
   if (!pedido) {
     return res.status(404).json({
       erro: `Pedido '${pedidoId}' não encontrado`
+    });
+  }
+
+  // Autorização: verifica se o pedido pertence ao usuário logado
+  if (pedido.usuarioId !== usuarioId) {
+    return res.status(403).json({
+      erro: 'Este pedido pertence a outro usuário'
     });
   }
 
@@ -88,12 +98,22 @@ function criarPagamentoPix(req, res) {
 }
 
 function consultarPagamentoPix(req, res) {
+  // Autorização: usuário vem do token JWT
+  const usuarioId = req.user.id;
   const { id } = req.params;
 
   const pagamento = pagamentos.lista.find(p => p.id === id);
   if (!pagamento) {
     return res.status(404).json({
       erro: `Pagamento '${id}' não encontrado`
+    });
+  }
+
+  // Autorização: verifica se o pagamento pertence a um pedido do usuário logado
+  const pedido = pedidos.lista.find(p => p.id === pagamento.pedidoId);
+  if (!pedido || pedido.usuarioId !== usuarioId) {
+    return res.status(403).json({
+      erro: 'Este pagamento pertence a outro usuário'
     });
   }
 
