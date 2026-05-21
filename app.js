@@ -11,6 +11,8 @@ const suporteRoutes = require('./src/routes/suporteRoute');
 const pagamentosRoutes = require('./src/routes/pagamentoRoute');
 const webhookRoutes = require('./src/routes/webhookRoute');
 
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
 const cors = require('cors');
 
 const app = express();
@@ -30,6 +32,9 @@ app.use('/api', cupomRoutes);
 app.use('/api', suporteRoutes);
  
 app.use('/api/pagamentos', pagamentosRoutes);
+
+const swaggerDocument = YAML.load('./docs/openapi.yaml');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get('/', (req, res) => {
   res.json({ mensagem: 'API Bulbe Energia funcionando!' });
