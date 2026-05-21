@@ -349,4 +349,119 @@ function obterPedido(req, res) {
   });
 }
 
-module.exports = { criarPedido, listarPedidos, obterPedido };
+function cancelarPedido(req, res) {
+  const { id } = req.params;
+  const usuarioId = Number(req.query.usuarioId);
+
+  // Validar usuarioId
+  if (!req.query.usuarioId || !Number.isInteger(usuarioId) || usuarioId <= 0) {
+    return res.status(400).json({
+      erro: 'usuarioId é obrigatório e deve ser um inteiro positivo'
+    });
+  }
+
+  // Buscar pedido
+  const pedido = pedidos.lista.find(p => p.id === id);
+  if (!pedido) {
+    return res.status(404).json({ erro: `Pedido '${id}' não encontrado` });
+  }
+
+  // Verificar se o pedido pertence ao usuário
+  if (pedido.usuarioId !== usuarioId) {
+    return res.status(403).json({
+      erro: 'Este pedido pertence a outro usuário'
+    });
+  }
+
+  // Verificar se o pedido pode ser cancelado
+  const STATUS_CANCELAVEIS = ['aguardando_pagamento', 'pago'];
+  if (!STATUS_CANCELAVEIS.includes(pedido.status)) {
+    return res.status(409).json({
+      erro: `Pedido não pode ser cancelado. Status atual: '${pedido.status}'. Apenas pedidos com status 'aguardando_pagamento' ou 'pago' podem ser cancelados.`
+    });
+  }
+
+  // Restaurar o estoque dos itens do pedido
+  for (const item of pedido.itens) {
+    const produto = produtos.find(p => p.id === item.produtoId);
+    if (produto) {
+      produto.estoque += item.quantidade;
+    }
+  }
+
+  // Se o pedido foi pago, processar reembolso
+  let reembolsoProcessado = false;
+  if (pedido.status === 'pago') {
+    // Simular disparo de processo de estorno via gateway
+    // Em uma aplicação real, isso chamaria a API do gateway de pagamento
+    reembolsoProcessado = processarReembolsoGateway(pedido);
+  }
+
+  // Atualizar status do pedido para cancelado
+  const dataCancel = new Date().toISOString();
+  pedido.status = 'cancelado';
+  pedido.canceladoEm = dataCancel;
+  if (reembolsoProcessado) {
+    pedido.reembolsoProcessado = true;
+    pedido.dataReembolso = dataCancel;
+  }
+
+  // Retornar pedido atualizado
+  return res.json({
+    mensagem: 'Pedido cancelado com sucesso',
+    pedido: {
+      id: pedido.id,
+      status: pedido.status,
+      canceladoEm: pedido.canceladoEm,
+      reembolsoProcessado: pedido.reembolsoProcessado || false,
+      dataReembolso: pedido.dataReembolso || null,
+      resumo: {
+        subtotalProdutos: pedido.resumo.subtotalProdutos,
+        descontoCupom: pedido.resumo.descontoCupom,
+        valorFrete: pedido.resumo.valorFrete,
+        total: pedido.resumo.total
+      },
+      itens: pedido.itens.map(item => ({
+        produtoId: item.produtoId,
+        nome: item.nome,
+        quantidade: item.quantidade,
+        precoUnitario: item.precoUnitario,
+        subtotal: item.subtotal
+      }))
+    }
+  });
+}
+
+/**
+ * Processa o reembolso via gateway de pagamento
+ * Em uma aplicação real, isso faria requisições HTTP para a API do gateway
+ * @param {Object} pedido - O pedido a ser reembolsado
+ * @returns {boolean} - true se o reembolso foi processado com sucesso
+ */
+function processarReembolsoGateway(pedido) {
+  try {
+    // MOCK: Simular chamada ao gateway de pagamento
+    console.log(`[GATEWAY] Processando reembolso para pedido ${pedido.id}`);
+    console.log(`[GATEWAY] Valor: R$ ${pedido.resumo.total.toFixed(2)}`);
+    console.log(`[GATEWAY] Método de pagamento: ${pedido.metodoPagamento}`);
+
+    // Em produção, faria algo como:
+    // const resposta = await fetch(`${GATEWAY_API_URL}/refund`, {
+    //   method: 'POST',
+    //   headers: { 'Authorization': `Bearer ${GATEWAY_TOKEN}` },
+    //   body: JSON.stringify({
+    //     pedidoId: pedido.id,
+    //     valor: pedido.resumo.total,
+    //     metodo: pedido.metodoPagamento
+    //   })
+    // });
+    // return resposta.ok;
+
+    return true;
+  } catch (erro) {
+    console.error('[GATEWAY] Erro ao processar reembolso:', erro.message);
+    return false;
+  }
+}
+
+module.exports = { criarPedido, listarPedidos, obterPedido, cancelarPedido };
