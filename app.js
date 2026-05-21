@@ -7,6 +7,7 @@ const carrinhoRoutes = require('./src/routes/carrinhoRoute');
 const usuariosRoutes = require('./src/routes/usuarioRoute');
 const cupomRoutes = require('./src/routes/cupomRoute');
 const pagamentosRoutes = require('./src/routes/pagamentoRoute');
+const notificacoesRoutes = require('./src/routes/notificacaoRoute');
 
 const cors = require('cors');
 
@@ -23,6 +24,7 @@ app.use('/api/v1', carrinhoRoutes);
 app.use('/api/v1', usuariosRoutes);
 app.use('/api', cupomRoutes);
 app.use('/api/pagamentos', pagamentosRoutes);
+app.use('/api/notificacoes', notificacoesRoutes);
 
 app.get('/', (req, res) => {
   res.json({ mensagem: 'API Bulbe Energia funcionando!' });
