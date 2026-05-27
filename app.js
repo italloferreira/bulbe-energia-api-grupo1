@@ -30,11 +30,10 @@ app.use('/api/v1', carrinhoRoutes);
 app.use('/api/v1', usuariosRoutes);
 app.use('/api', cupomRoutes);
 app.use('/api', suporteRoutes);
- 
 app.use('/api/pagamentos', pagamentosRoutes);
 
 const swaggerDocument = YAML.load('./docs/openapi.yaml');
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get('/', (req, res) => {
   res.json({ mensagem: 'API Bulbe Energia funcionando!' });
