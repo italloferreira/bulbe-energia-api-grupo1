@@ -529,7 +529,11 @@ class Checkout {
         }
 
         try {
-            const pedido = await BulbeAPI.criarPedido(payload);
+            // Se o PIX já foi gerado no modal, reaproveita (evita pedido duplicado)
+            let pedido = this.pedidoCriado;
+            if (!pedido) {
+                pedido = await BulbeAPI.criarPedido(payload);
+            }
 
             const compra = {
                 numeroPedido: pedido.id,
@@ -539,10 +543,10 @@ class Checkout {
                 total: pedido.resumo ? pedido.resumo.total : null
             };
 
-            // Gera cobrança PIX quando for o método escolhido
+            // Gera cobrança PIX quando for o método escolhido (reaproveita a do modal)
             if (metodoPagamento === 'pix') {
                 try {
-                    const pix = await BulbeAPI.criarPagamentoPix(pedido.id);
+                    const pix = this.pixGerado || await BulbeAPI.criarPagamentoPix(pedido.id);
                     compra.pix = {
                         pagamentoId: pix.pagamentoId,
                         valor: pix.valor,
@@ -641,6 +645,94 @@ simularProcessamento(metodoPagamento, tipoEnvio) {
             overlay.classList.add('mostrar');
             this.iniciarTimerPix();
             this.setupModalEvents(modal, overlay);
+            // INTEGRAÇÃO: gera o PIX real e preenche o modal com o QR Code verdadeiro
+            this.gerarPixNoModal();
+        }
+    }
+
+    // Monta o payload do pedido a partir do carrinho + dados de entrega.
+    // Retorna null se não há itens mapeáveis (sem produtoId).
+    montarPayloadPedido() {
+        const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+        const itens = carrinho
+            .filter(i => i.produtoId)
+            .map(i => ({ produtoId: i.produtoId, quantidade: i.quantidade || 1 }));
+        if (!itens.length) return null;
+
+        const dados = JSON.parse(localStorage.getItem('dadosEntrega') || '{}');
+        const enderecoEntrega = {
+            cep: (dados.cep && dados.cep.replace(/\D/g, '').length === 8) ? dados.cep : '32600-000',
+            logradouro: dados.endereco || 'Endereço não informado',
+            numero: 'S/N',
+            bairro: 'Centro',
+            cidade: 'Belo Horizonte',
+            estado: 'MG'
+        };
+
+        const envioAtivo = document.querySelector('.envio-opcao.ativo');
+        const tipoEnvio = envioAtivo ? envioAtivo.dataset.envio : 'padrao';
+        const freteTipo = tipoEnvio === 'expresso' ? 'expressa' : 'padrao';
+
+        return {
+            itens,
+            enderecoEntrega,
+            frete: { tipo: freteTipo, valor: Number(this.freteAtual) || 0 },
+            metodoPagamento: 'pix',
+            cupom: this.cupomAplicado ? this.codigoCupomAtual : undefined
+        };
+    }
+
+    // Cria pedido + cobrança PIX e injeta o QR Code real dentro do modal.
+    async gerarPixNoModal() {
+        // Sem login não dá para gerar cobrança real
+        if (!(window.BulbeAPI && BulbeAPI.estaLogado())) {
+            this.avisoNoModal('Faça login na sua conta para gerar o PIX real.');
+            return;
+        }
+
+        const payload = this.montarPayloadPedido();
+        if (!payload) {
+            this.avisoNoModal('Seu carrinho está vazio.');
+            return;
+        }
+
+        try {
+            // Reaproveita um pedido/pix já gerado (evita pedido duplicado)
+            if (!this.pedidoCriado) {
+                this.pedidoCriado = await BulbeAPI.criarPedido(payload);
+            }
+            if (!this.pixGerado) {
+                this.pixGerado = await BulbeAPI.criarPagamentoPix(this.pedidoCriado.id);
+            }
+            this.preencherModalComPix(this.pixGerado);
+        } catch (err) {
+            console.error('Erro ao gerar PIX:', err);
+            this.avisoNoModal(err.message || 'Não foi possível gerar o PIX.');
+        }
+    }
+
+    // Substitui o placeholder pelo QR Code real e o código copia-e-cola real
+    preencherModalComPix(pix) {
+        const container = document.querySelector('#modalPix .qrcode-container');
+        if (container && pix.qrCodeUrl) {
+            container.innerHTML =
+                '<img src="' + pix.qrCodeUrl + '" alt="QR Code PIX" ' +
+                'style="width:220px;height:220px;border-radius:8px;display:block;margin:0 auto;">';
+        }
+        const codigo = document.querySelector('#modalPix .codigo-pix');
+        if (codigo && pix.pixCopiaECola) {
+            codigo.textContent = pix.pixCopiaECola;
+            codigo.style.wordBreak = 'break-all';
+            codigo.style.fontSize = '11px';
+        }
+    }
+
+    avisoNoModal(texto) {
+        const container = document.querySelector('#modalPix .qrcode-container');
+        if (container) {
+            container.innerHTML =
+                '<div class="qrcode-placeholder"><span style="font-size:13px;text-align:center;padding:10px;">' +
+                texto + '</span></div>';
         }
     }
 
