@@ -1,16 +1,25 @@
 const express = require('express');
 const router = express.Router();
 
+const autenticar = require('../middlewares/auth');
+
 const {
   criarPedido,
   listarPedidos,
-  obterPedido
+  obterPedido,
+  cancelarPedido
 } = require('../controllers/pedidoController');
 
-router.post('/', criarPedido);
+// POST /api/pedidos - Criar novo pedido
+router.post('/', autenticar, criarPedido);
 
-router.get('/', listarPedidos);
+// GET /api/pedidos - Listar pedidos do usuário com filtros
+router.get('/', autenticar, listarPedidos);
 
-router.get('/:id', obterPedido);
+// GET /api/pedidos/:id - Obter detalhes de um pedido específico
+router.get('/:id', autenticar, obterPedido);
+
+// POST /api/pedidos/:id/cancelar - Cancelar um pedido
+router.post('/:id/cancelar', autenticar, cancelarPedido);
 
 module.exports = router;

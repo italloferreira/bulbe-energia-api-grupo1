@@ -1,248 +1,127 @@
-const produtos = require('../produtos');
+const db = require('../data/db');
 
-const carrinho = require('../data/data');
+function getCarrinhoFormatado(usuarioId) {
+  const itens = db.prepare('SELECT * FROM carrinho_itens WHERE usuario_id = ?').all(usuarioId);
 
-function getCarrinhoFormatado() {
+  const itensFormatados = itens.map(item => {
+    const produto = db.prepare('SELECT * FROM produtos WHERE id = ?').get(item.produto_id);
 
-  const itensFormatados = carrinho.itens.map(item => {
-
-    const produtoAtual = produtos.find(
-      p => p.id === item.produtoId
-    );
-
-    if (!produtoAtual || !produtoAtual.ativo) {
-
+    if (!produto || !produto.ativo) {
       return {
-        itemId: item.itemId,
-        produtoId: item.produtoId,
+        itemId: item.item_id,
+        produtoId: item.produto_id,
         nome: item.nome,
         quantidade: item.quantidade,
         indisponivel: true
       };
     }
 
-    const precoAtual = produtoAtual.preco;
-
-    const precoComDesconto =
-      precoAtual * (1 - produtoAtual.desconto / 100);
+    const precoAtual = produto.preco;
+    const precoComDesconto = precoAtual * (1 - produto.desconto / 100);
 
     return {
-      itemId: item.itemId,
-
-      produtoId: item.produtoId,
-
-      nome: produtoAtual.nome,
-
+      itemId: item.item_id,
+      produtoId: item.produto_id,
+      nome: produto.nome,
       preco: precoAtual,
-
-      desconto: produtoAtual.desconto,
-
+      desconto: produto.desconto,
       quantidade: item.quantidade,
-
-      subtotal: parseFloat(
-        (precoComDesconto * item.quantidade).toFixed(2)
-      ),
-
+      subtotal: parseFloat((precoComDesconto * item.quantidade).toFixed(2)),
       indisponivel: false
     };
   });
 
   const subtotal = itensFormatados.reduce((acc, item) => {
-
-    if (item.indisponivel) {
-      return acc;
-    }
-
+    if (item.indisponivel) return acc;
     return acc + item.subtotal;
-
   }, 0);
 
   return {
-
     itens: itensFormatados,
-
-    quantidadeItens: itensFormatados.reduce(
-      (acc, item) => acc + item.quantidade,
-      0
-    ),
-
+    quantidadeItens: itensFormatados.reduce((acc, item) => acc + item.quantidade, 0),
     subtotal: parseFloat(subtotal.toFixed(2)),
-
     totalEstimado: parseFloat(subtotal.toFixed(2))
   };
 }
 
-// RF-07 · Adicionar item ao carrinho
 function adicionarItem(req, res) {
+  const usuarioId = req.user.id;
+  const { produtoId, quantidade } = req.body;
 
-  console.log(req.body);
-
-  const { produtoId, quantidade, usuarioId } = req.body;
-
-  if (!produtoId || !quantidade || !usuarioId) {
-
-    return res.status(400).json({
-      erro: 'produtoId, quantidade e usuarioId são obrigatórios'
-    });
+  if (!produtoId || !quantidade) {
+    return res.status(400).json({ erro: 'produtoId e quantidade são obrigatórios' });
   }
 
   if (!Number.isInteger(quantidade) || quantidade <= 0) {
-
-    return res.status(400).json({
-      erro: 'quantidade deve ser um inteiro positivo'
-    });
+    return res.status(400).json({ erro: 'quantidade deve ser um inteiro positivo' });
   }
 
-  const produto = produtos.find(
-    p => p.id === produtoId && p.ativo
-  );
-
+  const produto = db.prepare('SELECT * FROM produtos WHERE id = ? AND ativo = 1').get(produtoId);
   if (!produto) {
-
-    return res.status(404).json({
-      erro: 'Produto não encontrado'
-    });
+    return res.status(404).json({ erro: 'Produto não encontrado' });
   }
 
-  const itemExistente = carrinho.itens.find(
-    i =>
-      i.produtoId === produtoId &&
-      i.usuarioId === usuarioId
-  );
-
-  const qtdAtual = itemExistente
-    ? itemExistente.quantidade
-    : 0;
+  const itemExistente = db.prepare('SELECT * FROM carrinho_itens WHERE produto_id = ? AND usuario_id = ?').get(produtoId, usuarioId);
+  const qtdAtual = itemExistente ? itemExistente.quantidade : 0;
 
   if (qtdAtual + quantidade > produto.estoque) {
-
-    return res.status(409).json({
-      erro: 'Quantidade solicitada excede o estoque disponível'
-    });
+    return res.status(409).json({ erro: 'Quantidade solicitada excede o estoque disponível' });
   }
 
   if (itemExistente) {
-
-    itemExistente.quantidade += quantidade;
-
+    db.prepare('UPDATE carrinho_itens SET quantidade = ? WHERE item_id = ?').run(qtdAtual + quantidade, itemExistente.item_id);
   } else {
-
-    carrinho.itens.push({
-      itemId: carrinho._proximoId++,
-
-      usuarioId,
-
-      produtoId: produto.id,
-
-      nome: produto.nome,
-
-      preco: produto.preco,
-
-      desconto: produto.desconto,
-
-      quantidade
-    });
+    db.prepare('INSERT INTO carrinho_itens (usuario_id, produto_id, nome, preco, desconto, quantidade) VALUES (?, ?, ?, ?, ?, ?)').run(usuarioId, produtoId, produto.nome, produto.preco, produto.desconto, quantidade);
   }
 
-  return res.status(201).json(
-    getCarrinhoFormatado()
-  );
+  return res.status(201).json(getCarrinhoFormatado(usuarioId));
 }
 
-// RF-08 · Visualizar carrinho
 function visualizarCarrinho(req, res) {
-
-  res.json(
-    getCarrinhoFormatado()
-  );
+  res.json(getCarrinhoFormatado(req.user.id));
 }
 
-// RF-08 · Atualizar quantidade
 function atualizarItem(req, res) {
-
   const itemId = parseInt(req.params.itemId);
-
   const { quantidade } = req.body;
 
-  if (
-    quantidade === undefined ||
-    !Number.isInteger(quantidade) ||
-    quantidade < 0
-  ) {
-
-    return res.status(400).json({
-      erro: 'quantidade deve ser um inteiro maior ou igual a 0'
-    });
+  if (quantidade === undefined || !Number.isInteger(quantidade) || quantidade < 0) {
+    return res.status(400).json({ erro: 'quantidade deve ser um inteiro maior ou igual a 0' });
   }
 
-  const index = carrinho.itens.findIndex(
-    i => i.itemId === itemId
-  );
-
-  if (index === -1) {
-
-    return res.status(404).json({
-      erro: 'Item não encontrado no carrinho'
-    });
+  const item = db.prepare('SELECT * FROM carrinho_itens WHERE item_id = ?').get(itemId);
+  if (!item) {
+    return res.status(404).json({ erro: 'Item não encontrado no carrinho' });
   }
 
   if (quantidade === 0) {
-
-    carrinho.itens.splice(index, 1);
-
-    return res.json(
-      getCarrinhoFormatado()
-    );
+    db.prepare('DELETE FROM carrinho_itens WHERE item_id = ?').run(itemId);
+    return res.json(getCarrinhoFormatado(req.user.id));
   }
 
-  const item = carrinho.itens[index];
-
-  const produto = produtos.find(
-    p => p.id === item.produtoId
-  );
-
+  const produto = db.prepare('SELECT * FROM produtos WHERE id = ?').get(item.produto_id);
   if (quantidade > produto.estoque) {
-
-    return res.status(409).json({
-      erro: 'Quantidade solicitada excede o estoque disponível'
-    });
+    return res.status(409).json({ erro: 'Quantidade solicitada excede o estoque disponível' });
   }
 
-  item.quantidade = quantidade;
-
-  return res.json(
-    getCarrinhoFormatado()
-  );
+  db.prepare('UPDATE carrinho_itens SET quantidade = ? WHERE item_id = ?').run(quantidade, itemId);
+  return res.json(getCarrinhoFormatado(req.user.id));
 }
 
-// RF-08 · Remover item
 function removerItem(req, res) {
-
   const itemId = parseInt(req.params.itemId);
+  const usuarioId = req.user.id;
 
-  const usuarioId = req.body?.usuarioId;
-  const index = carrinho.itens.findIndex(
-    i => i.itemId === itemId
-  );
-
-  if (index === -1) {
-
-    return res.status(404).json({
-      erro: 'Item não encontrado no carrinho'
-    });
+  const item = db.prepare('SELECT * FROM carrinho_itens WHERE item_id = ?').get(itemId);
+  if (!item) {
+    return res.status(404).json({ erro: 'Item não encontrado no carrinho' });
   }
 
-  const item = carrinho.itens[index];
-
-  if (item.usuarioId !== usuarioId) {
-
-    return res.status(403).json({
-      erro: 'Forbidden'
-    });
+  if (item.usuario_id !== usuarioId) {
+    return res.status(403).json({ erro: 'Forbidden' });
   }
 
-  carrinho.itens.splice(index, 1);
-
+  db.prepare('DELETE FROM carrinho_itens WHERE item_id = ?').run(itemId);
   return res.status(204).send();
 }
 

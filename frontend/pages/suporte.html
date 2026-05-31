@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <title>Suporte - BulbeShop</title>
+    <style>
+        .suporte-container {
+            padding: 20px;
+            max-width: 430px;
+            margin: 0 auto;
+        }
+        
+        .problema-tipo {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #08068D;
+        }
+        
+        .form-suporte {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #08068D;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .btn-enviar {
+            background: #08068D;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        
+        .btn-enviar:hover {
+            background: #06056a;
+        }
+        
+        .voltar-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #08068D;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="conteiener-top">
+            <div class="menu-e-logo">
+                <img src="../assets/img/icons/menu.png" alt="">
+                <img src="../assets/img/logo.png" alt="" onclick="window.location.href = '../index.html'">
+            </div>
+            <div class="conteiner-icones">
+                <img src="../assets/img/icons/sino.png" alt="">
+                <a href="./carrinho.html"><img src="../assets/img/icons/carrinho.png" alt=""></a>
+                <img src="../assets/img/icons/user.png" alt="">
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="suporte-container">
+            <h1 style="color: #08068D; margin-bottom: 20px;">Central de Suporte</h1>
+            
+            <div id="tipo-problema" class="problema-tipo">
+                <!-- O tipo de problema será carregado aqui via JavaScript -->
+            </div>
+            
+            <div class="form-suporte">
+                <h3 style="color: #08068D; margin-bottom: 20px;">Nos conte mais sobre o problema:</h3>
+                
+                <div class="form-group">
+                    <label for="nome">Seu nome completo</label>
+                    <input type="text" id="nome" placeholder="Digite seu nome">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">E-mail para contato</label>
+                    <input type="email" id="email" placeholder="seu@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="pedido">Número do pedido (se aplicável)</label>
+                    <input type="text" id="pedido" placeholder="Ex: #BULBE12345">
+                </div>
+                
+                <div class="form-group">
+                    <label for="descricao">Descrição detalhada do problema</label>
+                    <textarea id="descricao" placeholder="Descreva com detalhes o que aconteceu..."></textarea>
+                </div>
+                
+                <button class="btn-enviar" onclick="enviarSolicitacao()">Enviar Solicitação</button>
+                
+                <a href="../index.html" class="voltar-link">← Voltar para a loja</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Carregar tipo de problema do localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            const tipoProblema = localStorage.getItem('tipoProblema');
+            const container = document.getElementById('tipo-problema');
+            
+            const problemas = {
+                'devolucao': '📦 Solicitação de Devolução/Troca',
+                'problema': '🔧 Problema com Produto/Defeito',
+                'atraso': '⏰ Atraso na Entrega',
+                'outro': '❓ Outro Tipo de Problema'
+            };
+            
+            container.innerHTML = `<h3>${problemas[tipoProblema] || 'Problema não especificado'}</h3>`;
+        });
+        
+        const ASSUNTOS = {
+            'devolucao': 'Solicitação de Devolução/Troca',
+            'problema': 'Problema com Produto/Defeito',
+            'atraso': 'Atraso na Entrega',
+            'outro': 'Outro Tipo de Problema'
+        };
+
+        async function enviarSolicitacao() {
+            const nome = document.getElementById('nome').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const pedido = document.getElementById('pedido').value.trim();
+            const descricao = document.getElementById('descricao').value.trim();
+            const btn = document.querySelector('.btn-enviar');
+
+            if (!nome || !email || !descricao) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+
+            const tipo = localStorage.getItem('tipoProblema');
+            const assunto = ASSUNTOS[tipo] || 'Solicitação de Suporte';
+
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+
+            try {
+                const res = await BulbeAPI.abrirChamado(
+                    assunto,
+                    descricao,
+                    { nome, email },
+                    pedido || null
+                );
+                alert('Solicitação enviada com sucesso!\nProtocolo: ' + res.protocolo + '\nEntraremos em contato em até 24h.');
+                localStorage.removeItem('tipoProblema');
+                window.location.href = '../index.html';
+            } catch (err) {
+                alert('Não foi possível enviar agora: ' + (err.message || 'erro desconhecido'));
+                btn.disabled = false;
+                btn.textContent = 'Enviar Solicitação';
+            }
+        }
+    </script>
+    
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/menu.js"></script>
+</body>
+</html>

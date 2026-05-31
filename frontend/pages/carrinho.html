@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrinho Bulbe</title>
+  <link rel="stylesheet" href="../assets/css/carrinho.css">
+</head>
+
+<body>
+  <header>
+    <div class="conteiener-top">
+      <div class="menu-e-logo">
+        <img src="../assets/img/icons/menu.png" alt="">
+        <img src="../assets/img/logo.png" alt="" onclick="window.location.href = '../index.html'">
+      </div>
+      <div class="conteiner-icones">
+        <img src="../assets/img/icons/sino.png" alt="" onclick="window.location.href = './notificacao.html'">
+        <img src="../assets/img/icons/user.png" alt="" onclick="window.location.href = './usuario.html'">
+      </div>
+    </div>
+  </header>
+
+
+  
+  <main class="carrinho-container">
+    <!-- FAIXA ROXA + AÇÃO (voltar / logo) + CARD -->
+<!-- 🔹Topo da região do carrinho -->
+<section class="faixa-carrinho">
+  <div class="conteiner-titulo">
+    <h1 class="titulo">Carrinho de Compras</h1>
+  </div>
+</section>
+
+
+   
+  <div class="bar-acao">
+  <button class="btn-voltar" aria-label="Voltar" onclick="window.location.href = 'produtos.html'">
+    <img src="../assets/img/icons/seta-esquerda.png" alt="Voltar">
+  </button>
+
+
+  <img class="logo-bulbe-mini" src="../assets/img/produtos/logo-base.png" alt="Bulbe">
+</div>
+
+<!-- 🔹Card Resumo -->
+<section class="card-resumo">
+
+  <div class="conteudo-card">
+
+    <div class="linha1">
+      <p class="data-carrinho">19/ Novembro</p>
+      <span class="status-carrinho">Carrinho em aberto</span>
+    </div>
+
+<p class="preco-linha">
+  De <span class="risco" id="total-sem-desconto">R$ 0,00</span> por
+</p>
+
+    <h2 class="preco-novo">R$ <span id="valor-novo">327,75</span></h2>
+
+  </div> <!-- fim do conteúdo interno -->
+
+  <div class="barra-desconto">
+    Desconto Bulbe: <strong id="desconto-topo">R$ 0,00</strong>
+</div>
+
+
+</section>
+
+
+<section class="lista-carrinho">
+  <div class="titulo-carrinho">
+    <div class="linha-divisoria"></div>
+
+   <div class="titulo-lista">
+  <img src="../assets/img/produtos/Icon.png" class="icon-detalhe-trash" alt="">
+  <span class="texto-titulo-carrinho">Detalhamento do Carrinho</span>
+
+  <!-- ÍCONE NOVO -->
+</div>
+
+
+  <div class="conteiner-produto">
+
+    <!-- PRODUTO 1 -->
+    <div class="produto">
+      <img src="" id="img">
+      <div class="info-produto">
+        <p class="nome" id="nome"></p>
+        <p class="preco-antigo-prod" id="valorTotal"></p>
+        <div class="controle">
+          <div class="quantidade">
+            <button class="menos">-</button>
+            <div class="campo">1</div>
+            <button class="mais">+</button>
+          </div>
+          <p class="preco">R$ <span class="valor" id="valorFinal"></span></p>
+        </div>
+      </div>
+     <div class="coluna-direita">
+    <button class="remover">
+        <img src="../assets/img/produtos/trash-01.png" alt="" class="">
+    </button>
+    <p class="preco">R$ 00,00</p>
+</div>
+
+
+    </div>
+
+    
+  </div>
+
+</section>
+
+
+  <!-- BLOCO: RESUMO DO CÁLCULO -->
+<section class="bloco-resumo">
+
+  <!-- Título “Resumo do cálculo” -->
+  <div class="cabecalho-resumo">
+    <!-- se quiser, depois troca esse span por um ícone -->
+    <span class="icone-resumo">☑</span>
+    <span class="texto-cabecalho">Resumo do cálculo</span>
+  </div>
+
+  <!-- Card branco com borda cinza clara -->
+  <div class="resumo-final">
+
+    <!-- Linha: Frete -->
+    <div class="linha-resumo">
+      <div class="info-resumo">
+        <span class="marcador frete"></span>
+        <span>Frete</span>
+      </div>
+      <span class="valor-resumo" id="frete">R$ 0,00</span>
+    </div>
+
+    <!-- Linha: Subtotal -->
+    <div class="linha-resumo">
+      <div class="info-resumo">
+        <span class="marcador subtotal"></span>
+        <span>Subtotal</span>
+      </div>
+      <span class="valor-resumo" id="subtotal">R$ 581,93</span>
+    </div>
+
+    <!-- Linha: Desconto Bulbe -->
+    <div class="linha-resumo">
+      <div class="info-resumo">
+        <span class="marcador desconto"></span>
+        <span>Desconto Bulbe</span>
+      </div>
+      <span class="valor-resumo" id="desconto">R$ 254,18</span>
+    </div>
+
+    <hr>
+
+    <!-- Valor total
+    <div class="valor-total-linha">
+      <span class="label-total">Valor total</span>
+
+      <div class="valores-total">
+        <span class="total-antigo">R$ 581,93</span>
+        <span class="total-novo" id="total">R$ 327,75</span>
+      </div>
+    </div> -->
+    <div class="valor-total-linha">
+  <span class="label-total">Valor total</span>
+
+  <div class="valores-lado">
+    <span class="total-antigo" id="total-antigo">R$ 581,93</span>
+    <span class="total-novo" id="total">R$ 327,75</span>
+  </div>
+</div>
+
+  </div>
+</section>
+
+    <div class="botoes-carrinho">
+      <button id="finalizar" onclick="window.location.href = './lead.html'">Finalizar Compra</button>
+      <button id="continuar" onclick="window.location.href = '../index.html'">Continuar Comprando</button>
+    </div>
+  </main>
+
+  <script src="../assets/js/carrinho-completo.js"></script>
+  <script src="../assets/js/menu.js"></script>
+  <script src="../assets/js/carrinho.js"></script>
+</body>
+</html>
