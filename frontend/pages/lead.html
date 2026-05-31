@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../assets/css/lead.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
+  <title>Checkout - BulbeShop</title>
+</head>
+
+<body>
+  <header>
+    <div class="conteiener-top">
+        <div class="conteiner-img">
+          <img src="../assets/img/logo.png" alt="" id="img-logo">
+        </div>
+    </div>
+  </header>
+
+  <main>
+
+        <div class="barra-progresso">
+        <div class="etapas">
+            <div class="etapa etapa-concluida">
+                <div class="numero">1</div>
+                <div class="texto-etapa">Carrinho</div>
+            </div>
+            <div class="linha linha-concluida"></div>
+            <div class="etapa ">
+                <div class="numero">2</div>
+                <div class="texto-etapa">Entrega</div>
+            </div>
+            <div class="linha "></div>
+            <div class="etapa ">
+                <div class="numero">3</div>
+                <div class="texto-etapa">Finalizado</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="conteiner-txt">
+      <h2 class="titulo">Checkout</h2>
+
+      <p class="sub-titulo">Economize com segurança!</p>
+    </div>
+
+    <div class="conteiner-forms">
+      <form>
+        <label for="nome">Nome completo <p>*</p> </label>
+        <input type="text" name="nome" id="nome" placeholder="Seu nome e sobrenome">
+
+        <label for="endereço">Endereço <p>*</p> </label>
+        <input type="text" name="endereço" id="endereco" placeholder="Bairro, rua, numero">
+
+        <label for="cep">CEP <p>*</p> </label>
+        <input type="text" name="cep" id="cep" placeholder="00000-000">
+
+        <label for="cpf">CPF <p>*</p> </label>
+        <input type="text" name="cpf" id="cpf" placeholder="000.000.000-00">
+
+        <label for="celular">Celular <p>*</p> </label>
+        <input type="text" name="celular" id="celular" placeholder="(00)00000-0000">
+
+        <label for="email">E-mail <p>*</p> </label>
+        <input type="email" name="email" id="email" placeholder="nome@email.com">
+
+      </form>
+
+      <a href="./checkout.html"><button type="submit" class="btn-finalizar">Próximo passo</button></a>
+      <button id="btn-cancelar-compra" onclick="window.location.href = '../index.html'">Cancelar compra</button>
+    </div>
+  </main>
+  <script src="../assets/js/menu.js"></script>
+  <script src="../assets/js/form.js"></script>
+</body>
+
+</html>

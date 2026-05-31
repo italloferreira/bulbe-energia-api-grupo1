@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout Bulbe</title>
+  <link rel="stylesheet" href="../assets/css/checkout.css">
+</head>
+
+<body>
+  <header>
+    <div class="conteiener-top">
+        <div class="conteiner-img">
+          <img src="../assets/img/logo.png" alt="" id="img-logo">
+        </div>
+    </div>
+  </header>
+
+  <!-- BARRA DE PROGRESSO -->
+  <div class="barra-progresso">
+    <div class="etapas">
+      <div class="etapa etapa-concluida">
+        <div class="numero">1</div>
+        <div class="texto-etapa">Carrinho</div>
+      </div>
+      <div class="linha linha-concluida"></div>
+      <div class="etapa etapa-atual">
+        <div class="numero">2</div>
+        <div class="texto-etapa">Entrega</div>
+      </div>
+      <div class="linha"></div>
+      <div class="etapa">
+        <div class="numero">3</div>
+        <div class="texto-etapa">Finalizado</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conteudo">
+    <!-- ENDEREÇO DE ENTREGA -->
+    <div class="endereco-section">
+      <div class="endereco-header-centralizado">
+        <span class="endereco-titulo">Endereço de Entrega</span>
+        <div class="seletor-cep">
+          <select class="select-cep">
+            <option value="" id="cep"></option>
+          </select>
+          <div class="seta-select">▼</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divisor"></div>
+
+    <!-- PRODUTO COM FOTO -->
+    <div class="produto-section">
+      <div class="produto-completo">
+        <div class="produto-imagem">
+          <img src="" alt="Lâmpada Super Bulbo" class="foto-produto" id="img">
+        </div>
+        <div class="produto-info">
+          <div class="produto-header">
+            <h1 id="nomeProduto"></h1>
+            <p class="produto-descricao" id="descricaoProduto"></p>
+            <div class="produto-preco-marca">
+              <span class="preco-atual" id="valorFinal"></span>
+              <span class="marca-produto"  id="valorTotal"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divisor"></div>
+
+    <!-- CUPOM PROMOCIONAL -->
+    <div class="cupom-section">
+      <h3>Cupom Promocional</h3>
+      
+      <div class="cupom-input-container">
+        <input type="text" id="cupom" placeholder="Adicione seu cupom">
+        <button class="btn-aplicar-cupom">Aplicar Cupom</button>
+      </div>
+    </div>
+
+    <div class="divisor"></div>
+
+    <!-- OPÇÕES DE ENVIO -->
+    <div class="envio-section">
+      <h3>Opções de envio</h3>
+      
+      <div class="envio-opcoes-container">
+        <div class="envio-opcao" data-envio="padrao">
+          <div class="opcao-radio">
+            <div class="radio-circle"></div>
+          </div>
+          <div class="opcao-info">
+            <div class="opcao-titulo">Entrega Padrão</div>
+            <div class="opcao-prazo">5-7 dias úteis</div>
+          </div>
+          <div class="opcao-preco">Grátis</div>
+        </div>
+
+        <div class="envio-opcao" data-envio="expresso">
+          <div class="opcao-radio">
+            <div class="radio-circle"></div>
+          </div>
+          <div class="opcao-info">
+            <div class="opcao-titulo">Entrega Expressa</div>
+            <div class="opcao-prazo">1-2 dias úteis</div>
+          </div>
+          <div class="opcao-preco">R$ 15,90</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divisor"></div>
+
+    <!-- RESUMO DO PEDIDO -->
+    <div class="resumo-section">
+      <h3>Resumo do Pedido</h3>
+      <div class="resumo-linhas">
+        <div class="resumo-linha">
+          <span>Subtotal</span>
+          <span class="valor-subtotal">R$ 99,90</span>
+        </div>
+        <div class="resumo-linha">
+          <span>Frete</span>
+          <span class="valor-frete">R$ 0,00</span>
+        </div>
+        <div class="resumo-linha desconto-linha" style="display: none;">
+          <span>Desconto</span>
+          <span class="valor-desconto">-R$ 18,00</span>
+        </div>
+        <div class="resumo-linha total-geral">
+          <span>Total</span>
+          <span class="valor-total">R$ 99,90</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="divisor"></div>
+
+    <!-- MÉTODOS DE PAGAMENTO -->
+    <div class="pagamento-section">
+      <h3>Métodos de pagamento</h3>
+      <div class="metodo cartao" data-metodo="cartao">
+        <img src="../assets/img/icons/cartao.png" alt="cartão">
+        <p>Pagar com Cartão</p>
+      </div>
+      <div class="metodo pix" data-metodo="pix">
+        <img src="../assets/img/icons/pix.png" alt="pix">
+        <p>Pagar com PIX</p>
+      </div>
+      <div class="metodo boleto" data-metodo="boleto">
+        <img src="../assets/img/icons/boleto.png" alt="boleto">
+        <p>Pagar com Boleto</p>
+      </div>
+    </div>
+
+    <!-- BOTÃO FINALIZAR COMPRA -->
+    <button class="finalizar-compra-btn">Finalizar compra</button>
+  </div>
+
+  <script src="../assets/js/menu.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/checkout.js"></script>
+</body>
+
+</html>
