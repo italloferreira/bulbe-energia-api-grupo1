@@ -181,6 +181,7 @@
     <div class="botoes-carrinho">
       <button id="finalizar">Finalizar Compra</button>
       <button id="continuar" onclick="window.location.href = '../index.html'">Continuar Comprando</button>
+      <p id="msg-carrinho-vazio" style="display:none; color:#e53e3e; margin-top:8px; font-size:0.95rem;">Seu carrinho está vazio. Adicione produtos antes de finalizar.</p>
     </div>
   </main>
 
@@ -193,7 +194,7 @@
     document.getElementById('finalizar').addEventListener('click', function () {
       const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
       if (carrinho.length === 0) {
-        alert('Seu carrinho está vazio. Adicione produtos antes de finalizar.');
+        document.getElementById('msg-carrinho-vazio').style.display = 'block';
         return;
       }
       if (window.BulbeAPI && BulbeAPI.estaLogado()) {
@@ -201,7 +202,6 @@
       } else {
         // guarda o destino e manda fazer login
         localStorage.setItem('redirecionarApos', './lead.html');
-        alert('Você precisa entrar na sua conta para finalizar a compra.');
         window.location.href = './usuario.html';
       }
     });

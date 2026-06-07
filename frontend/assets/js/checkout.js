@@ -4,14 +4,12 @@
 
   // Sem login -> volta para login (mantém destino)
   if (!(window.BulbeAPI && BulbeAPI.estaLogado())) {
-    alert('Você precisa entrar na sua conta para finalizar a compra.');
     localStorage.setItem('redirecionarApos', './checkout.html');
     window.location.href = './usuario.html';
     return;
   }
   // Carrinho vazio -> volta para o carrinho
   if (carrinho.length === 0) {
-    alert('Seu carrinho está vazio.');
     window.location.href = './carrinho.html';
     return;
   }

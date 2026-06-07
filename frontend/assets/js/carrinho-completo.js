@@ -267,7 +267,6 @@ window.comprarAgora = function (produto) {
         window.location.href = './lead.html';
     } else {
         localStorage.setItem('redirecionarApos', './lead.html');
-        alert('Você precisa entrar na sua conta para finalizar a compra.');
         window.location.href = './usuario.html';
     }
 };

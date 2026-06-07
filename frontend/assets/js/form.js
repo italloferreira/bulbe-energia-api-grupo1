@@ -27,13 +27,11 @@ document.addEventListener('DOMContentLoaded', function () {
   // ---- Proteção de etapa: precisa estar logado e ter itens no carrinho ----
   const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
   if (!(window.BulbeAPI && BulbeAPI.estaLogado())) {
-    alert('Você precisa entrar na sua conta para finalizar a compra.');
     localStorage.setItem('redirecionarApos', './lead.html');
     window.location.href = './usuario.html';
     return;
   }
   if (carrinho.length === 0) {
-    alert('Seu carrinho está vazio.');
     window.location.href = './carrinho.html';
     return;
   }
