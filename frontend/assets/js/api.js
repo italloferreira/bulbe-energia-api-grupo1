@@ -37,6 +37,38 @@ window.BulbeAPI = (function () {
     localStorage.removeItem(USER_KEY);
   }
 
+  /* ----------------------- Endereços salvos (por usuário) -----------------------
+     Guardados no navegador, amarrados ao e-mail da conta logada, para ficarem
+     disponíveis no seletor de CEP da tela de finalização. */
+  function _chaveEnderecos() {
+    const u = getUsuario();
+    const id = (u && (u.email || u.id)) || 'anon';
+    return 'bulbe_enderecos_' + id;
+  }
+
+  function listarEnderecos() {
+    try {
+      return JSON.parse(localStorage.getItem(_chaveEnderecos()) || '[]');
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function salvarEndereco(endereco) {
+    if (!endereco || !endereco.cep) return listarEnderecos();
+    const lista = listarEnderecos();
+    const cepLimpo = String(endereco.cep).replace(/\D/g, '');
+    // Evita duplicar o mesmo CEP: atualiza se já existir.
+    const idx = lista.findIndex(e => String(e.cep).replace(/\D/g, '') === cepLimpo);
+    if (idx >= 0) {
+      lista[idx] = endereco;
+    } else {
+      lista.push(endereco);
+    }
+    localStorage.setItem(_chaveEnderecos(), JSON.stringify(lista));
+    return lista;
+  }
+
   // Wrapper de fetch: injeta JSON + Authorization e trata erros da API.
   async function request(path, options = {}) {
     const opts = { ...options };
@@ -138,6 +170,7 @@ window.BulbeAPI = (function () {
 
   return {
     getToken, getUsuario, estaLogado, salvarSessao, logout,
+    listarEnderecos, salvarEndereco,
     request,
     cadastrar, login,
     catalogoHome, listarProdutos, produto,

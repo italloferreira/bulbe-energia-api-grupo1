@@ -5,6 +5,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function render() {
     if (window.BulbeAPI && BulbeAPI.estaLogado()) {
+      // Se o usuário veio do carrinho para logar, volta para finalizar a compra.
+      const destino = localStorage.getItem('redirecionarApos');
+      if (destino) {
+        localStorage.removeItem('redirecionarApos');
+        window.location.href = destino;
+        return;
+      }
       const u = BulbeAPI.getUsuario() || {};
       areaDeslogado.style.display = 'none';
       areaLogado.style.display = 'block';

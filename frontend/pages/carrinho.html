@@ -179,13 +179,32 @@
 </section>
 
     <div class="botoes-carrinho">
-      <button id="finalizar" onclick="window.location.href = './lead.html'">Finalizar Compra</button>
+      <button id="finalizar">Finalizar Compra</button>
       <button id="continuar" onclick="window.location.href = '../index.html'">Continuar Comprando</button>
     </div>
   </main>
 
+  <script src="../assets/js/api.js"></script>
   <script src="../assets/js/carrinho-completo.js"></script>
   <script src="../assets/js/menu.js"></script>
   <script src="../assets/js/carrinho.js"></script>
+  <script>
+    // Exige login antes de prosseguir para o checkout.
+    document.getElementById('finalizar').addEventListener('click', function () {
+      const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+      if (carrinho.length === 0) {
+        alert('Seu carrinho está vazio. Adicione produtos antes de finalizar.');
+        return;
+      }
+      if (window.BulbeAPI && BulbeAPI.estaLogado()) {
+        window.location.href = './lead.html';
+      } else {
+        // guarda o destino e manda fazer login
+        localStorage.setItem('redirecionarApos', './lead.html');
+        alert('Você precisa entrar na sua conta para finalizar a compra.');
+        window.location.href = './usuario.html';
+      }
+    });
+  </script>
 </body>
 </html>
