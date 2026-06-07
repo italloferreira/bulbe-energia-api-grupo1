@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap"
+    rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/usuario.css">
+    <title>Usuário</title>
+    <style>
+      .auth-box{max-width:430px;margin:0 auto;padding:0 20px 30px;}
+      .auth-tabs{display:flex;gap:8px;margin:10px 0 18px;}
+      .auth-tab{flex:1;padding:12px;border:none;border-radius:8px;background:#eef0fb;color:#08068D;font-family:'Poppins',sans-serif;font-weight:600;cursor:pointer;}
+      .auth-tab.ativo{background:#08068D;color:#fff;}
+      .auth-form{display:flex;flex-direction:column;background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.08);}
+      .auth-form label{font-weight:600;color:#08068D;margin:10px 0 5px;font-size:14px;}
+      .auth-form input{padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-family:'Poppins',sans-serif;font-size:14px;}
+      .auth-btn{margin-top:18px;background:#08068D;color:#fff;border:none;padding:14px;border-radius:8px;font-weight:600;font-size:16px;cursor:pointer;}
+      .auth-btn:hover{background:#06056a;}
+      .auth-msg{margin-top:10px;font-size:13px;min-height:18px;}
+      .auth-msg.erro{color:#d92d20;}
+      .auth-msg.ok{color:#12b76a;}
+      .lista-pedidos{padding:6px 20px 0;}
+      .pedido-card{background:#f8f9ff;border-left:4px solid #08068D;border-radius:10px;padding:12px 15px;margin-bottom:10px;}
+      .pedido-card .pid{font-weight:700;color:#08068D;}
+      .pedido-card .pstatus{font-size:12px;text-transform:capitalize;color:#536679;}
+      .pedido-card .ptotal{font-weight:600;}
+      .pedidos-vazio{color:#777;padding:8px 0;}
+      #desvincular{cursor:pointer;}
+    </style>
+</head>
+<body>
+    <header>
+        <div class="conteiener-top">
+            <div class="menu-e-logo">
+                <img src="../assets/img/icons/menu.png" alt="">
+                <img src="../assets/img/logo.png" alt="" onclick="window.location.href = '../index.html'">
+        </div>
+        <div class="conteiner-icones">
+            <img src="../assets/img/icons/sino.png" alt="" onclick="window.location.href = './notificacao.html'">
+            <a href="../pages/carrinho.html"><img src="../assets/img/icons/carrinho.png" alt=""></a>
+        </div>
+        </div>
+    </header>
+    
+        <div class="overlay"></div>
+
+     <nav id="menu-lateral" class="menu-lateral">
+        <div class="menu-top">
+            <img src="../assets/img/logo-azul.png" alt="Logo" class="logo-menu">
+            <img src="../assets/img/icons/x.png" alt="Fechar" class="btn-fechar">
+        </div>
+
+        <ul class="menu-lista">
+            <li>
+                <a href="../index.html"><img src="../assets/img/icons/home.png" alt="">Home</a>
+            </li>
+
+            <li class="categoria">
+                <div class="categoria-header">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <img src="../assets/img/icons/categoria.png" alt="">
+                        <span>Categorias</span>
+                    </div>
+                    <img src="../assets/img/icons/seta-direita.png" alt="" class="seta">
+                </div>
+
+                <ul class="submenu">
+                    <li><a href="./destaquecasa.html"><img src="../assets/img/icons/casa2.png" alt="">Casa</a></li>
+                    <li><a href="./destaqueeletrodomesticos.html"><img src="../assets/img/icons/eletrodomestico.png"
+                                alt="">Eletrodoméstico</a></li>
+                    <li><a href="./destaqueseletronicos.html"><img src="../assets/img/icons/eletronico2.png" alt="">Eletrônico</a>
+                    </li>
+                    <li><a href="./destaqueofertas.html"><img src="../assets/img/icons/oferta2.png" alt="">Oferta</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="./carrinho.html"><img src="../assets/img/icons/carrinho2.png" alt="">Carrinho</a>
+            </li>
+
+            <li>
+                <a href="./usuario.html"><img src="../assets/img/icons/user2.png" alt="">Minha conta</a>
+            </li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>Minha conta</h1>
+
+        <!-- ===== VISAO DESLOGADO: LOGIN / CADASTRO ===== -->
+        <section id="area-deslogado" class="auth-box" style="display:none;">
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab ativo" data-tab="login">Entrar</button>
+                <button type="button" class="auth-tab" data-tab="cadastro">Criar conta</button>
+            </div>
+
+            <form id="form-login" class="auth-form">
+                <label for="login-email">E-mail</label>
+                <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email">
+
+                <label for="login-senha">Senha</label>
+                <input type="password" id="login-senha" placeholder="Sua senha" autocomplete="current-password">
+
+                <button type="submit" class="auth-btn">Entrar</button>
+                <p class="auth-msg" id="login-msg"></p>
+            </form>
+
+            <form id="form-cadastro" class="auth-form" style="display:none;">
+                <label for="cad-nome">Nome completo</label>
+                <input type="text" id="cad-nome" placeholder="Seu nome e sobrenome">
+
+                <label for="cad-email">E-mail</label>
+                <input type="email" id="cad-email" placeholder="seu@email.com" autocomplete="email">
+
+                <label for="cad-senha">Senha</label>
+                <input type="password" id="cad-senha" placeholder="Crie uma senha (min. 6 caracteres)" autocomplete="new-password">
+
+                <button type="submit" class="auth-btn">Criar conta</button>
+                <p class="auth-msg" id="cad-msg"></p>
+            </form>
+        </section>
+
+        <!-- ===== VISAO LOGADO: DADOS + PEDIDOS ===== -->
+        <section id="area-logado" style="display:none;">
+            <div id="usuario">
+                <img src="../assets/img/icons/Usuário.png" alt="usuario">
+                <div id="nome_usuario">
+                    <h3 id="conta-nome">Nome do Usuário</h3>
+                    <p>Bem-vindo(a) de volta!</p>
+                </div>
+            </div>
+
+            <img src="../assets/img/linha.png" alt="" class="linha">
+
+            <div class="info" id="email">
+                <div class="escrita">
+                    <h3>E-MAIL</h3>
+                    <p id="conta-email">email.do.usuario@gmail.com</p>
+                </div>
+                <img src="../assets/img/icons/Lapis.png" alt="">
+            </div>
+            <img src="../assets/img/linha.png" alt="" class="linha">
+
+            <div class="info" id="transacoes">
+                <img src="../assets/img/icons/Dinheiro.png" alt="">
+                <div class="escrita" id="escritaTransacoes">
+                    <h3>Meus Pedidos</h3>
+                    <p>Histórico de compras e status</p>
+                </div>
+            </div>
+
+            <div id="lista-pedidos" class="lista-pedidos">
+                <p class="pedidos-vazio">Carregando pedidos...</p>
+            </div>
+
+            <img src="../assets/img/linha.png" alt="" class="linha">
+            <div class="info" id="desvincular">
+                <img src="../assets/img/icons/desvincular.png" alt="">
+                <div class="escrita" id="escritaDesvincular">
+                    <h3>Sair da conta</h3>
+                    <p>Encerrar sessão neste dispositivo</p>
+                </div>
+                <img src="../assets/img/icons/seta-direita.png" alt="">
+            </div>
+        </section>
+    </main>
+    
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-main">
+                <div class="footer-brand">
+                    <img src="../assets/img/logo.png" alt="Bulbe" class="footer-logo">
+                    <p class="footer-tagline">Iluminando sua vida com as melhores ofertas</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4 onclick="window.location.href = 'usuario.html'">Minha Conta</h4>
+                    </div>
+                    <div class="footer-column">
+                        <h4 onclick="window.location.href = '../index.html'">Início</h4>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Atendimento</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                </div>
+                    <div class="security-seal">
+                </div>
+                <div class="footer-copyright">
+                    <small>© 2025 Bulbe - Todos os direitos reservados</small>
+                    <small>CNPJ: 12.345.678/0001-90</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/menu.js"></script>
+    <script src="../assets/js/conta.js"></script>
+</body>
+</html>

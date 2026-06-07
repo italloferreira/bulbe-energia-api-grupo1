@@ -1,0 +1,241 @@
+@media screen and (max-width: 430px) {
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins";
+  }
+
+  body {
+    width: 430px;
+    height: 100%;
+  }
+
+
+  header {
+    width: 430px;
+    height: 15vh;
+    background-color: #08068D;
+  }
+
+  .conteiener-top {
+    width: 100%;
+    height: 8vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+
+  #btn-cancelar-compra{
+    width: 90%;
+    margin-top: 10px;
+    border: solid #08068D 2px;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 400;
+    background: #ffff;
+    color: #08068D;
+    cursor: pointer;
+    font-size: 18px;
+  }
+
+  .conteiner-img{
+    margin-top: 20px;
+    width: 50%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  main {
+    position: relative;
+    bottom: 20px;
+    border-radius: 10px 10px 0px 0px;
+    background: #f8f8ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
+
+  .conteiner-txt {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    height: 20vh;
+    gap: 10px;
+
+  }
+
+  .titulo {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    width: 90%;
+    color: #08068D;
+    font-size: 23px;
+    font-weight: 500;
+  }
+
+  .sub-titulo {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    width: 90%;
+    font-size: 14px;
+    font-weight: 200;
+  }
+
+
+  .conteiner-forms {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
+
+  .conteiner-forms form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 15px;
+    width: 90%;
+    height: 100%;
+  }
+
+  .conteiner-forms label {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    font-weight: 300;
+    font-size: 14px;
+  }
+
+  .conteiner-forms label p {
+    color: red;
+  }
+
+  .conteiner-forms input {
+    width: 100%;
+    padding: 12px;
+    border: lightgrey solid 1px;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 200;
+  }
+
+    .conteiner-forms a{
+      width: 90%;
+    }
+
+  .btn-finalizar {
+    width: 100%;
+    margin-top: 10px;
+    border: 0;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 400;
+    background: #08068D;
+    color: #ffff;
+    cursor: pointer;
+    font-size: 18px;
+  }
+
+
+  .barra-progresso {
+        width: 430px;
+        background: #fff;
+        padding: 30px 30px 25px;
+        margin-top: -10px;
+        border-radius: 30px 30px 0 0;
+    }
+
+    .etapas {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+    }
+
+    .etapa {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 2;
+    }
+
+    .numero {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #f0f0f0;
+        border: 2px solid #ddd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+        color: #536679;
+        margin-bottom: 5px;
+        transition: all 0.5s ease;
+    }
+
+    .texto-etapa {
+        font-size: 12px;
+        color: #536679;
+        font-weight: 500;
+        text-align: center;
+        transition: all 0.5s ease;
+    }
+
+    .etapa-concluida .numero {
+        background: #08068D;
+        border-color: #08068D;
+        color: #fff;
+    }
+
+    .etapa-atual .numero {
+        background: #08068D;
+        border-color: #08068D;
+        color: #fff;
+        box-shadow: 0 0 0 3px rgba(38, 208, 124, 0.2);
+    }
+
+    .etapa-concluida .texto-etapa {
+        color: #08068D;
+        font-weight: 600;
+    }
+
+    .etapa-atual .texto-etapa {
+        color: #08068D;
+        font-weight: 600;
+    }
+
+    .linha {
+        flex: 1;
+        height: 3px;
+        background: #ddd;
+        margin: 0 10px;
+        position: relative;
+        top: -15px;
+        transition: all 0.5s ease;
+    }
+
+    .linha-concluida {
+        background: #08068D !important;
+    }
+
+
+}

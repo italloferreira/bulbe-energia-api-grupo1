@@ -1,0 +1,1983 @@
+openapi: 3.1.0
+
+info:
+  title: Bulbe Energia API
+  version: 1.0.0
+  description: |
+    API REST do sistema Bulbe Energia para monitoramento de energia renovável.
+
+    Funcionalidades:
+    - Catálogo de produtos, busca, categorias, ofertas e destaques
+    - Carrinho de compras com gerenciamento de itens
+    - Cadastro e autenticação de usuários com JWT
+    - Pedidos com cálculo de frete, validação de cupons e múltiplos métodos de pagamento
+    - Pagamento PIX com geração de QR Code
+    - Suporte ao cliente com abertura de chamados
+    - Webhook para confirmação de pagamento
+
+servers:
+  - url: http://localhost:3000
+    description: Servidor local de desenvolvimento
+
+tags:
+  - name: Usuários
+    description: Cadastro e autenticação de usuários.
+  - name: Produtos
+    description: Consulta, busca, categorias, ofertas e destaques de produtos.
+  - name: Carrinho
+    description: Gerenciamento dos itens adicionados ao carrinho.
+  - name: Pedidos
+    description: Criação, listagem, consulta e cancelamento de pedidos.
+  - name: Pagamentos
+    description: Criação e consulta de pagamentos via PIX.
+  - name: Cupons
+    description: Validação de cupons promocionais.
+  - name: Frete
+    description: Cálculo de frete com opções de entrega.
+  - name: Suporte
+    description: Abertura de chamados de suporte.
+  - name: Webhooks
+    description: Recebimento de notificações de eventos externos.
+
+paths:
+  /api/v1/usuarios:
+    post:
+      tags:
+        - Usuários
+      summary: Cadastrar novo usuário
+      description: Cria um novo usuário com nome, email e senha. A senha é armazenada com hash bcrypt.
+      operationId: cadastrarUsuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CadastroUsuarioRequest'
+      responses:
+        '201':
+          description: Usuário cadastrado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '400':
+          description: Campos obrigatórios ausentes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: nome, email e senha são obrigatórios
+        '409':
+          description: Email já cadastrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Email já cadastrado
+
+  /api/v1/login:
+    post:
+      tags:
+        - Usuários
+      summary: Login e geração de token JWT
+      description: Autentica o usuário com email e senha e retorna um token JWT com validade de 7 dias.
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login realizado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Campos obrigatórios ausentes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: email e senha são obrigatórios
+        '401':
+          description: Email ou senha inválidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Email ou senha inválidos
+
+  /api/v1/catalogo/home:
+    get:
+      tags:
+        - Produtos
+      summary: Listar catálogo da página inicial
+      description: Retorna os produtos ativos disponíveis para exibição na home.
+      operationId: listarCatalogoHome
+      responses:
+        '200':
+          description: Catálogo retornado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  produtos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Produto'
+
+  /api/v1/produtos:
+    get:
+      tags:
+        - Produtos
+      summary: Listar ou buscar produtos
+      description: Retorna produtos ativos. Quando o parâmetro search é informado, filtra os produtos pelo nome.
+      operationId: listarProdutos
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Termo usado para buscar produtos pelo nome.
+          schema:
+            type: string
+          example: lampada
+      responses:
+        '200':
+          description: Lista de produtos retornada com sucesso.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Produto'
+
+  /api/v1/produtos/destaques:
+    get:
+      tags:
+        - Produtos
+      summary: Listar produtos em destaque
+      description: Retorna até 10 produtos ativos, em estoque e marcados como destaque.
+      operationId: listarDestaques
+      responses:
+        '200':
+          description: Produtos em destaque retornados com sucesso.
+          headers:
+            Cache-Control:
+              description: Cache público configurado por 300 segundos.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Produto'
+
+  /api/v1/produtos/ofertas:
+    get:
+      tags:
+        - Produtos
+      summary: Listar produtos em oferta
+      description: Retorna até 10 produtos ativos, em estoque e com desconto maior que zero.
+      operationId: listarOfertas
+      responses:
+        '200':
+          description: Produtos em oferta retornados com sucesso.
+          headers:
+            Cache-Control:
+              description: Cache público configurado por 300 segundos.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Produto'
+
+  /api/v1/produtos/categoria/{categoria}:
+    get:
+      tags:
+        - Produtos
+      summary: Listar produtos por categoria
+      description: |
+        Lista produtos ativos por categoria, com suporte a paginação e ordenação.
+
+        Categorias aceitas: casa, eletronicos, eletrodomesticos e ofertas.
+      operationId: listarPorCategoria
+      parameters:
+        - name: categoria
+          in: path
+          required: true
+          description: Slug da categoria.
+          schema:
+            type: string
+            enum:
+              - casa
+              - eletronicos
+              - eletrodomesticos
+              - ofertas
+          example: casa
+        - name: pagina
+          in: query
+          required: false
+          description: Número da página desejada.
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          example: 1
+        - name: limite
+          in: query
+          required: false
+          description: Quantidade de produtos por página.
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+          example: 20
+        - name: ordenar_por
+          in: query
+          required: false
+          description: Critério de ordenação.
+          schema:
+            type: string
+            enum:
+              - preco_asc
+              - preco_desc
+              - mais_vendidos
+              - novidades
+          example: preco_asc
+      responses:
+        '200':
+          description: Produtos da categoria retornados com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProdutosPaginados'
+        '400':
+          description: Valor inválido para o parâmetro ordenar_por.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroOrdenacao'
+        '404':
+          description: Categoria não encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroCategoria'
+
+  /api/v1/produtos/{id}:
+    get:
+      tags:
+        - Produtos
+      summary: Buscar produto por ID
+      description: Retorna os dados completos de um produto ativo. Produtos inativos só são retornados quando o header x-admin for true.
+      operationId: buscarProdutoPorId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador do produto.
+          schema:
+            type: integer
+          example: 1
+        - name: x-admin
+          in: header
+          required: false
+          description: Permite visualizar produto inativo quando definido como true.
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+          example: 'false'
+      responses:
+        '200':
+          description: Produto encontrado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProdutoDetalhado'
+        '404':
+          description: Produto não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Produto não encontrado
+
+  /api/v1/carrinho:
+    get:
+      tags:
+        - Carrinho
+      summary: Visualizar carrinho
+      description: Retorna os itens do carrinho em memória, com totais calculados.
+      operationId: visualizarCarrinho
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Carrinho retornado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarrinhoResponse'
+        '401':
+          description: Token não fornecido ou inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Token não fornecido. Faça login para continuar.
+
+  /api/v1/carrinho/itens:
+    post:
+      tags:
+        - Carrinho
+      summary: Adicionar item ao carrinho
+      description: Adiciona um produto ativo ao carrinho ou incrementa sua quantidade caso o item já exista.
+      operationId: adicionarItemCarrinho
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdicionarItemCarrinhoRequest'
+      responses:
+        '201':
+          description: Item adicionado ao carrinho com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarrinhoResponse'
+        '400':
+          description: Dados obrigatórios ausentes ou quantidade inválida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '401':
+          description: Token não fornecido ou inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '404':
+          description: Produto não encontrado ou inativo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Produto não encontrado
+        '409':
+          description: Quantidade solicitada excede o estoque disponível.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Quantidade solicitada excede o estoque disponível
+
+  /api/v1/carrinho/itens/{itemId}:
+    patch:
+      tags:
+        - Carrinho
+      summary: Atualizar quantidade de item do carrinho
+      description: Atualiza a quantidade de um item. Quando quantidade for 0, o item é removido do carrinho.
+      operationId: atualizarItemCarrinho
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: Identificador do item no carrinho.
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AtualizarItemCarrinhoRequest'
+        example:
+          quantidade: 3
+      responses:
+        '200':
+          description: Quantidade atualizada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarrinhoResponse'
+        '400':
+          description: Quantidade inválida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: quantidade deve ser um inteiro maior ou igual a 0
+        '401':
+          description: Token não fornecido ou inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '404':
+          description: Item não encontrado no carrinho.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Item não encontrado no carrinho
+        '409':
+          description: Quantidade solicitada excede o estoque disponível.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Quantidade solicitada excede o estoque disponível
+
+    delete:
+      tags:
+        - Carrinho
+      summary: Remover item do carrinho
+      description: Remove um item do carrinho. O usuário deve ser o proprietário do item.
+      operationId: removerItemCarrinho
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: Identificador do item no carrinho.
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoverItemCarrinhoRequest'
+      responses:
+        '204':
+          description: Item removido com sucesso. Sem corpo de resposta.
+        '401':
+          description: Token não fornecido ou inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '403':
+          description: Usuário não autorizado a remover este item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Forbidden
+        '404':
+          description: Item não encontrado no carrinho.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Item não encontrado no carrinho
+
+  /api/pedidos:
+    post:
+      tags:
+        - Pedidos
+      summary: Criar pedido
+      description: Cria um novo pedido a partir dos itens informados, com validação de estoque, cupom e frete.
+      operationId: criarPedido
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriarPedidoRequest'
+      responses:
+        '201':
+          description: Pedido criado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoResponse'
+        '400':
+          description: Dados inválidos na requisição.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '401':
+          description: Token não fornecido ou inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '404':
+          description: Produto não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '409':
+          description: Estoque insuficiente para um ou mais itens.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+    get:
+      tags:
+        - Pedidos
+      summary: Listar pedidos do usuário
+      description: Retorna os pedidos do usuário autenticado com suporte a filtros por status e data, além de paginação.
+      operationId: listarPedidos
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filtrar por status do pedido.
+          schema:
+            type: string
+            enum:
+              - aguardando_pagamento
+              - pago
+              - enviado
+              - entregue
+              - cancelado
+          example: aguardando_pagamento
+        - name: data_inicio
+          in: query
+          required: false
+          description: Data inicial do filtro (formato AAAA-MM-DD).
+          schema:
+            type: string
+            format: date
+          example: 2025-01-01
+        - name: data_fim
+          in: query
+          required: false
+          description: Data final do filtro (formato AAAA-MM-DD).
+          schema:
+            type: string
+            format: date
+          example: 2025-12-31
+        - name: pagina
+          in: query
+          required: false
+          description: Número da página desejada.
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          example: 1
+        - name: limite
+          in: query
+          required: false
+          description: Quantidade de pedidos por página.
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+          example: 10
+      responses:
+        '200':
+          description: Lista de pedidos retornada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidosListaResponse'
+        '400':
+          description: Parâmetros de filtro ou paginação inválidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '401':
+          description: Token não fornecido ou inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+  /api/pedidos/{id}:
+    get:
+      tags:
+        - Pedidos
+      summary: Obter pedido por ID
+      description: Retorna os detalhes completos de um pedido específico do usuário autenticado.
+      operationId: obterPedido
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 'Identificador do pedido (ex: PED-00001).'
+          schema:
+            type: string
+          example: PED-00001
+      responses:
+        '200':
+          description: Pedido encontrado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoResponse'
+        '401':
+          description: Token não fornecido ou inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '403':
+          description: Pedido pertence a outro usuário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Este pedido pertence a outro usuário
+        '404':
+          description: Pedido não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Pedido 'PED-00001' não encontrado
+
+  /api/pedidos/{id}/cancelar:
+    post:
+      tags:
+        - Pedidos
+      summary: Cancelar pedido
+      description: Cancela um pedido nos status aguardando_pagamento ou pago. Restaura o estoque e processa reembolso se aplicável.
+      operationId: cancelarPedido
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 'Identificador do pedido (ex: PED-00001).'
+          schema:
+            type: string
+          example: PED-00001
+      responses:
+        '200':
+          description: Pedido cancelado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensagem:
+                    type: string
+                    example: Pedido cancelado com sucesso
+                  pedido:
+                    $ref: '#/components/schemas/PedidoCanceladoResponse'
+        '401':
+          description: Token não fornecido ou inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '403':
+          description: Pedido pertence a outro usuário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '404':
+          description: Pedido não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '409':
+          description: Pedido não pode ser cancelado no status atual.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+  /api/pagamentos/pix:
+    post:
+      tags:
+        - Pagamentos
+      summary: Criar cobrança PIX
+      description: Cria uma cobrança PIX para um pedido no status aguardando_pagamento. Gera QR Code e código copia-e-cola.
+      operationId: criarPagamentoPix
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriarPagamentoPixRequest'
+      responses:
+        '201':
+          description: Cobrança PIX criada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagamentoPixResponse'
+        '400':
+          description: pedido_id é obrigatório.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '401':
+          description: Token não fornecido ou inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '403':
+          description: Pedido pertence a outro usuário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '404':
+          description: Pedido não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '409':
+          description: Pedido não está aguardando pagamento ou já existe PIX pendente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+  /api/pagamentos/pix/{id}:
+    get:
+      tags:
+        - Pagamentos
+      summary: Consultar pagamento PIX
+      description: Retorna os dados atualizados de um pagamento PIX, incluindo status e dados do QR Code.
+      operationId: consultarPagamentoPix
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 'Identificador do pagamento (ex: PIX-00001).'
+          schema:
+            type: string
+          example: PIX-00001
+      responses:
+        '200':
+          description: Pagamento encontrado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagamentoPixConsultaResponse'
+        '401':
+          description: Token não fornecido ou inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '403':
+          description: Pagamento pertence a outro usuário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '404':
+          description: Pagamento não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+  /api/cupons/validar:
+    post:
+      tags:
+        - Cupons
+      summary: Validar cupom
+      description: Valida um cupom promocional informando código e subtotal. Retorna o tipo de desconto e valores calculados.
+      operationId: validarCupom
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidarCupomRequest'
+      responses:
+        '200':
+          description: Cupom validado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CupomValidadoResponse'
+        '400':
+          description: Cupom inválido, expirado, esgotado ou valor mínimo não atingido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '401':
+          description: Token não fornecido ou inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+  /api/frete/calcular:
+    post:
+      tags:
+        - Frete
+      summary: Calcular opções de frete
+      description: Calcula as opções de frete disponíveis com base no CEP de destino e nos itens do carrinho.
+      operationId: calcularFrete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalcularFreteRequest'
+      responses:
+        '200':
+          description: Opções de frete calculadas com sucesso.
+          headers:
+            X-Cache:
+              description: Indica se a resposta veio do cache (HIT) ou foi calculada (MISS).
+              schema:
+                type: string
+                enum:
+                  - HIT
+                  - MISS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreteResponse'
+        '400':
+          description: CEP inválido ou itens mal formatados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+  /api/suporte/chamados:
+    post:
+      tags:
+        - Suporte
+      summary: Abrir chamado de suporte
+      description: Abre um chamado de suporte ao cliente. Envia e-mail de confirmação e notifica equipe interna via Slack.
+      operationId: abrirChamado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbrirChamadoRequest'
+      responses:
+        '201':
+          description: Chamado aberto com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChamadoResponse'
+        '400':
+          description: Campos obrigatórios ausentes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+  /api/webhooks/pagamento:
+    post:
+      tags:
+        - Webhooks
+      summary: Receber webhook de pagamento
+      description: Recebe notificações de confirmação de pagamento via webhook. Valida a assinatura HMAC-SHA256 no header x-webhook-signature.
+      operationId: receberWebhookPagamento
+      parameters:
+        - name: x-webhook-signature
+          in: header
+          required: true
+          description: Assinatura HMAC-SHA256 do payload bruto para validação.
+          schema:
+            type: string
+          example: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPagamentoRequest'
+      responses:
+        '200':
+          description: Webhook processado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recebido:
+                    type: boolean
+                    example: true
+                  acao:
+                    type: string
+                    enum:
+                      - pedido_atualizado
+                      - nenhuma
+                    example: pedido_atualizado
+                  pedidoId:
+                    type: string
+                    example: PED-00001
+                  novoStatus:
+                    type: string
+                    example: pago
+        '400':
+          description: Payload inválido ou gatewayId ausente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '401':
+          description: Assinatura do webhook inválida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Assinatura do webhook inválida
+        '404':
+          description: Pagamento com gatewayId não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '500':
+          description: Falha interna ao processar webhook.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              example:
+                erro: Falha ao processar webhook
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT obtido através do endpoint de login.
+
+  schemas:
+    # ─────────────────────────────────────────
+    # USUÁRIOS
+    # ─────────────────────────────────────────
+    CadastroUsuarioRequest:
+      type: object
+      required:
+        - nome
+        - email
+        - senha
+      properties:
+        nome:
+          type: string
+          description: Nome completo do usuário.
+          example: João Silva
+        email:
+          type: string
+          format: email
+          description: Email do usuário.
+          example: joao@email.com
+        senha:
+          type: string
+          minLength: 6
+          description: Senha do usuário (mínimo 6 caracteres).
+          example: 123456
+
+    UsuarioResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador do usuário.
+          example: 1
+        nome:
+          type: string
+          description: Nome completo do usuário.
+          example: João Silva
+        email:
+          type: string
+          format: email
+          description: Email do usuário.
+          example: joao@email.com
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - senha
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email do usuário.
+          example: joao@email.com
+        senha:
+          type: string
+          description: Senha do usuário.
+          example: 123456
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Token JWT com validade de 7 dias.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        usuario:
+          $ref: '#/components/schemas/UsuarioResponse'
+
+    # ─────────────────────────────────────────
+    # PRODUTOS
+    # ─────────────────────────────────────────
+    Produto:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: Lâmpada LED 12W
+        descricaoLonga:
+          type: string
+          example: Lâmpada LED econômica com alta durabilidade e baixo consumo de energia.
+        galeriaImagens:
+          type: array
+          items:
+            type: string
+            format: uri
+          example:
+            - https://example.com/imagens/lampada1.jpg
+        preco:
+          type: number
+          format: double
+          example: 29.9
+        desconto:
+          type: number
+          format: double
+          example: 10
+        destaque:
+          type: boolean
+          example: true
+        marca:
+          type: string
+          example: Philips
+        categoria:
+          type: string
+          example: casa
+        especificacoesTecnicas:
+          type: object
+          additionalProperties: true
+          example:
+            potencia: 12W
+            voltagem: 110V
+            temperaturaCor: 6500K
+        estoque:
+          type: integer
+          example: 120
+        avaliacoesResumidas:
+          $ref: '#/components/schemas/AvaliacoesResumidas'
+        ativo:
+          type: boolean
+          example: true
+
+    ProdutoDetalhado:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: Lâmpada LED 12W
+        descricaoLonga:
+          type: string
+          example: Lâmpada LED econômica com alta durabilidade e baixo consumo de energia.
+        galeriaImagens:
+          type: array
+          items:
+            type: string
+            format: uri
+        preco:
+          type: number
+          format: double
+          example: 29.9
+        desconto:
+          type: number
+          format: double
+          example: 10
+        marca:
+          type: string
+          example: Philips
+        categoria:
+          type: string
+          example: casa
+        especificacoesTecnicas:
+          type: object
+          additionalProperties: true
+        estoque:
+          type: integer
+          example: 120
+        avaliacoesResumidas:
+          $ref: '#/components/schemas/AvaliacoesResumidas'
+
+    AvaliacoesResumidas:
+      type: object
+      properties:
+        media:
+          type: number
+          format: double
+          example: 4.8
+        total:
+          type: integer
+          example: 256
+
+    ProdutoCategoriaResumo:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: Lâmpada LED 12W
+        preco:
+          type: number
+          format: double
+          example: 29.9
+        precoComDesconto:
+          type: number
+          format: double
+          example: 26.91
+        imagemPrincipal:
+          type: string
+          format: uri
+          nullable: true
+          example: https://example.com/imagens/lampada1.jpg
+        categoria:
+          type: string
+          example: casa
+        estoqueDisponivel:
+          type: integer
+          example: 120
+
+    ProdutosPaginados:
+      type: object
+      properties:
+        categoria:
+          type: string
+          example: casa
+        paginacao:
+          $ref: '#/components/schemas/Paginacao'
+        produtos:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProdutoCategoriaResumo'
+
+    Paginacao:
+      type: object
+      properties:
+        paginaAtual:
+          type: integer
+          example: 1
+        limite:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 1
+        totalPaginas:
+          type: integer
+          example: 1
+
+    # ─────────────────────────────────────────
+    # CARRINHO
+    # ─────────────────────────────────────────
+    CarrinhoResponse:
+      type: object
+      properties:
+        itens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemCarrinho'
+        quantidadeItens:
+          type: integer
+          description: Quantidade total de itens no carrinho.
+          example: 2
+        subtotal:
+          type: number
+          format: double
+          description: Soma dos subtotais dos itens disponíveis.
+          example: 53.82
+        totalEstimado:
+          type: number
+          format: double
+          description: Valor total estimado (igual ao subtotal, sem frete).
+          example: 53.82
+
+    ItemCarrinho:
+      type: object
+      properties:
+        itemId:
+          type: integer
+          example: 1
+        produtoId:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: Lâmpada LED 12W
+        preco:
+          type: number
+          format: double
+          example: 29.9
+        desconto:
+          type: number
+          format: double
+          example: 10
+        quantidade:
+          type: integer
+          example: 2
+        subtotal:
+          type: number
+          format: double
+          example: 53.82
+        indisponivel:
+          type: boolean
+          description: Indica se o produto não está mais disponível.
+          example: false
+
+    AdicionarItemCarrinhoRequest:
+      type: object
+      required:
+        - produtoId
+        - quantidade
+        - usuarioId
+      properties:
+        produtoId:
+          type: integer
+          description: Identificador do produto.
+          example: 1
+        quantidade:
+          type: integer
+          minimum: 1
+          description: Quantidade desejada.
+          example: 1
+        usuarioId:
+          type: integer
+          description: Identificador do usuário.
+          example: 1
+
+    AtualizarItemCarrinhoRequest:
+      type: object
+      required:
+        - quantidade
+      properties:
+        quantidade:
+          type: integer
+          minimum: 0
+          description: Nova quantidade (0 remove o item).
+          example: 3
+
+    RemoverItemCarrinhoRequest:
+      type: object
+      required:
+        - usuarioId
+      properties:
+        usuarioId:
+          type: integer
+          description: Identificador do usuário para verificação de propriedade.
+          example: 1
+
+    # ─────────────────────────────────────────
+    # PEDIDOS
+    # ─────────────────────────────────────────
+    CriarPedidoRequest:
+      type: object
+      required:
+        - itens
+        - enderecoEntrega
+        - frete
+        - metodoPagamento
+      properties:
+        itens:
+          type: array
+          description: Lista de itens do pedido.
+          items:
+            type: object
+            required:
+              - produtoId
+              - quantidade
+            properties:
+              produtoId:
+                type: integer
+                description: Identificador do produto.
+                example: 1
+              quantidade:
+                type: integer
+                minimum: 1
+                description: Quantidade do produto.
+                example: 2
+          example:
+            - produtoId: 1
+              quantidade: 2
+            - produtoId: 2
+              quantidade: 1
+        enderecoEntrega:
+          type: object
+          required:
+            - cep
+            - logradouro
+            - numero
+            - bairro
+            - cidade
+            - estado
+          properties:
+            cep:
+              type: string
+              description: CEP do endereço (formato 00000-000).
+              example: 01310-000
+            logradouro:
+              type: string
+              example: Avenida Paulista
+            numero:
+              type: string
+              example: "1000"
+            bairro:
+              type: string
+              example: Bela Vista
+            cidade:
+              type: string
+              example: São Paulo
+            estado:
+              type: string
+              description: Sigla do estado (UF).
+              example: SP
+            complemento:
+              type: string
+              example: Apto 42
+        frete:
+          type: object
+          required:
+            - tipo
+            - valor
+          properties:
+            tipo:
+              type: string
+              enum:
+                - padrao
+                - expressa
+              description: Tipo de frete selecionado.
+              example: padrao
+            valor:
+              type: number
+              format: double
+              minimum: 0
+              description: Valor do frete.
+              example: 15.00
+        cupom:
+          type: string
+          nullable: true
+          description: Código do cupom promocional (opcional).
+          example: BULBE10
+        metodoPagamento:
+          type: string
+          enum:
+            - pix
+            - cartao
+            - boleto
+          description: Método de pagamento escolhido.
+          example: pix
+
+    PedidoResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identificador único do pedido.
+          example: PED-00001
+        usuarioId:
+          type: integer
+          example: 1
+        status:
+          type: string
+          enum:
+            - aguardando_pagamento
+            - pago
+            - enviado
+            - entregue
+            - cancelado
+          example: aguardando_pagamento
+        criadoEm:
+          type: string
+          format: date-time
+          example: 2025-05-20T10:00:00.000Z
+        itens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemPedido'
+        enderecoEntrega:
+          $ref: '#/components/schemas/EnderecoEntrega'
+        frete:
+          type: object
+          properties:
+            tipo:
+              type: string
+              enum:
+                - padrao
+                - expressa
+              example: padrao
+            valor:
+              type: number
+              format: double
+              example: 15.00
+        cupom:
+          type: string
+          nullable: true
+          example: BULBE10
+        metodoPagamento:
+          type: string
+          enum:
+            - pix
+            - cartao
+            - boleto
+          example: pix
+        resumo:
+          $ref: '#/components/schemas/ResumoPedido'
+        codigoRastreio:
+          type: string
+          nullable: true
+          example: null
+
+    ItemPedido:
+      type: object
+      properties:
+        produtoId:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: Lâmpada LED 12W
+        quantidade:
+          type: integer
+          example: 2
+        precoUnitario:
+          type: number
+          format: double
+          description: Preço unitário com desconto aplicado.
+          example: 26.91
+        subtotal:
+          type: number
+          format: double
+          example: 53.82
+
+    EnderecoEntrega:
+      type: object
+      properties:
+        cep:
+          type: string
+          example: 01310-000
+        logradouro:
+          type: string
+          example: Avenida Paulista
+        numero:
+          type: string
+          example: "1000"
+        bairro:
+          type: string
+          example: Bela Vista
+        cidade:
+          type: string
+          example: São Paulo
+        estado:
+          type: string
+          example: SP
+        complemento:
+          type: string
+          nullable: true
+          example: Apto 42
+
+    ResumoPedido:
+      type: object
+      properties:
+        subtotalProdutos:
+          type: number
+          format: double
+          description: Soma dos subtotais dos itens.
+          example: 53.82
+        descontoCupom:
+          type: number
+          format: double
+          description: Valor do desconto aplicado pelo cupom.
+          example: 5.38
+        valorFrete:
+          type: number
+          format: double
+          description: Valor do frete (pode ser 0 se frete grátis).
+          example: 15.00
+        total:
+          type: number
+          format: double
+          description: Valor total do pedido.
+          example: 63.44
+
+    PedidoListaItem:
+      type: object
+      properties:
+        id:
+          type: string
+          example: PED-00001
+        data:
+          type: string
+          format: date-time
+          example: 2025-05-20T10:00:00.000Z
+        status:
+          type: string
+          enum:
+            - aguardando_pagamento
+            - pago
+            - enviado
+            - entregue
+            - cancelado
+          example: aguardando_pagamento
+        valorTotal:
+          type: number
+          format: double
+          example: 63.44
+        quantidadeItens:
+          type: integer
+          example: 3
+
+    PedidosListaResponse:
+      type: object
+      properties:
+        paginacao:
+          $ref: '#/components/schemas/Paginacao'
+        pedidos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PedidoListaItem'
+
+    PedidoCanceladoResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: PED-00001
+        status:
+          type: string
+          enum:
+            - cancelado
+          example: cancelado
+        canceladoEm:
+          type: string
+          format: date-time
+          example: 2025-05-20T12:00:00.000Z
+        reembolsoProcessado:
+          type: boolean
+          example: false
+        dataReembolso:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+        resumo:
+          $ref: '#/components/schemas/ResumoPedido'
+        itens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemPedido'
+
+    # ─────────────────────────────────────────
+    # PAGAMENTOS
+    # ─────────────────────────────────────────
+    CriarPagamentoPixRequest:
+      type: object
+      required:
+        - pedido_id
+      properties:
+        pedido_id:
+          type: string
+          description: 'Identificador do pedido (ex: PED-00001).'
+          example: PED-00001
+
+    PagamentoPixResponse:
+      type: object
+      properties:
+        pagamentoId:
+          type: string
+          example: PIX-00001
+        pedidoId:
+          type: string
+          example: PED-00001
+        status:
+          type: string
+          enum:
+            - pendente
+            - pago
+            - expirado
+          example: pendente
+        valor:
+          type: number
+          format: double
+          example: 63.44
+        qrCodeUrl:
+          type: string
+          format: uri
+          description: URL da imagem do QR Code para pagamento.
+          example: https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=...
+        pixCopiaECola:
+          type: string
+          description: Código PIX copia-e-cola para pagamento.
+          example: "00020126580014BR.GOV.BCB.PIX..."
+        expiraEm:
+          type: string
+          format: date-time
+          description: Data/hora de expiração do QR Code.
+          example: 2025-05-20T10:15:00.000Z
+        expiraEmSegundos:
+          type: integer
+          description: Tempo de expiração em segundos.
+          example: 900
+
+    PagamentoPixConsultaResponse:
+      type: object
+      properties:
+        pagamentoId:
+          type: string
+          example: PIX-00001
+        pedidoId:
+          type: string
+          example: PED-00001
+        status:
+          type: string
+          enum:
+            - pendente
+            - pago
+            - expirado
+          example: pendente
+        valor:
+          type: number
+          format: double
+          example: 63.44
+        qrCodeUrl:
+          type: string
+          format: uri
+          example: https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=...
+        pixCopiaECola:
+          type: string
+          example: "00020126580014BR.GOV.BCB.PIX..."
+        criadoEm:
+          type: string
+          format: date-time
+          example: 2025-05-20T10:00:00.000Z
+        expiraEm:
+          type: string
+          format: date-time
+          example: 2025-05-20T10:15:00.000Z
+
+    # ─────────────────────────────────────────
+    # CUPONS
+    # ─────────────────────────────────────────
+    ValidarCupomRequest:
+      type: object
+      required:
+        - codigo
+        - subtotal
+      properties:
+        codigo:
+          type: string
+          description: Código do cupom promocional.
+          example: BULBE10
+        subtotal:
+          type: number
+          format: double
+          minimum: 0
+          description: Valor do subtotal para cálculo do desconto.
+          example: 100.00
+
+    CupomValidadoResponse:
+      type: object
+      properties:
+        valido:
+          type: boolean
+          description: Indica se o cupom é válido.
+          example: true
+        codigo:
+          type: string
+          example: BULBE10
+        tipo:
+          type: string
+          enum:
+            - percentual
+            - fixo
+            - frete_gratis
+          example: percentual
+        valor:
+          type: number
+          description: Valor do cupom (percentual ou fixo).
+          example: 10
+        descontoCalculado:
+          type: number
+          format: double
+          description: Valor do desconto calculado sobre o subtotal.
+          example: 10.00
+        freteGratis:
+          type: boolean
+          description: Indica se o cupom concede frete grátis.
+          example: false
+        totalComDesconto:
+          type: number
+          format: double
+          description: Subtotal com o desconto aplicado.
+          example: 90.00
+
+    # ─────────────────────────────────────────
+    # FRETE
+    # ─────────────────────────────────────────
+    CalcularFreteRequest:
+      type: object
+      required:
+        - cep_destino
+        - itens
+      properties:
+        cep_destino:
+          type: string
+          description: CEP de destino para entrega.
+          example: 01310-000
+        itens:
+          type: array
+          description: Lista de itens para cálculo de peso e frete.
+          items:
+            type: object
+            required:
+              - id
+              - quantidade
+            properties:
+              id:
+                type: integer
+                description: Identificador do produto.
+                example: 1
+              quantidade:
+                type: integer
+                minimum: 1
+                description: Quantidade do produto.
+                example: 2
+          example:
+            - id: 1
+              quantidade: 2
+            - id: 2
+              quantidade: 1
+
+    FreteResponse:
+      type: object
+      properties:
+        cepDestino:
+          type: string
+          description: CEP formatado do destino.
+          example: 01310-000
+        calculadoEm:
+          type: string
+          format: date-time
+          description: Momento do cálculo.
+          example: 2025-05-20T10:00:00.000Z
+        opcoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FreteOpcao'
+
+    FreteOpcao:
+      type: object
+      properties:
+        tipo:
+          type: string
+          enum:
+            - padrao
+            - expressa
+          example: padrao
+        nome:
+          type: string
+          example: Entrega Padrão
+        transportadora:
+          type: string
+          example: Correios
+        valor:
+          type: number
+          format: double
+          example: 15.00
+        prazoDiasUteis:
+          type: integer
+          description: Prazo de entrega em dias úteis.
+          example: 4
+
+    # ─────────────────────────────────────────
+    # SUPORTE
+    # ─────────────────────────────────────────
+    AbrirChamadoRequest:
+      type: object
+      required:
+        - assunto
+        - mensagem
+        - usuario
+      properties:
+        assunto:
+          type: string
+          description: Assunto do chamado.
+          example: Problema com meu pedido
+        mensagem:
+          type: string
+          description: Descrição detalhada do problema.
+          example: Recebi o produto com defeito e gostaria de solicitar a troca.
+        usuario:
+          type: object
+          required:
+            - nome
+            - email
+          properties:
+            nome:
+              type: string
+              example: João Silva
+            email:
+              type: string
+              format: email
+              example: joao@email.com
+        pedido_id:
+          type: string
+          nullable: true
+          description: Identificador do pedido relacionado (opcional).
+          example: PED-00001
+
+    ChamadoResponse:
+      type: object
+      properties:
+        protocolo:
+          type: string
+          description: Número de protocolo único do chamado.
+          example: SUP-00001-20250520
+        status:
+          type: string
+          enum:
+            - aberto
+          example: aberto
+        assunto:
+          type: string
+          example: Problema com meu pedido
+        criadoEm:
+          type: string
+          format: date-time
+          example: 2025-05-20T10:00:00.000Z
+        mensagem:
+          type: string
+          description: Mensagem de confirmação.
+          example: 'Chamado aberto com sucesso. Protocolo: SUP-00001-20250520'
+
+    # ─────────────────────────────────────────
+    # WEBHOOK
+    # ─────────────────────────────────────────
+    WebhookPagamentoRequest:
+      type: object
+      required:
+        - evento
+        - gatewayId
+        - status
+      properties:
+        evento:
+          type: string
+          description: Tipo de evento do webhook.
+          example: pagamento.confirmado
+        gatewayId:
+          type: string
+          description: Identificador do pagamento no gateway.
+          example: MOCK-a1b2c3d4e5f6a1b2c3d4e5f6
+        status:
+          type: string
+          description: Status do pagamento no gateway.
+          example: pago
+
+    # ─────────────────────────────────────────
+    # ERRO
+    # ─────────────────────────────────────────
+    Erro:
+      type: object
+      properties:
+        erro:
+          type: string
+          description: Mensagem de erro descritiva.
+          example: Mensagem de erro
+
+    ErroCategoria:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: Categoria 'moveis' não encontrada.
+        categoriasDisponiveis:
+          type: array
+          items:
+            type: string
+          example:
+            - casa
+            - eletronicos
+            - eletrodomesticos
+            - ofertas
+
+    ErroOrdenacao:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Valor de ordenar_por inválido: 'menor_preco'."
+        valoresPermitidos:
+          type: array
+          items:
+            type: string
+          example:
+            - preco_asc
+            - preco_desc
+            - mais_vendidos
+            - novidades

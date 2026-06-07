@@ -1,0 +1,269 @@
+@media screen and (max-width: 440px) {
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Poppins', system-ui, sans-serif
+    }
+
+    :root {
+        --cor_fundo: #F6F9F9;
+        --borda_produtos: #D5D5D5;
+        --fundo_produtos: #FFFFFF;
+        --fundo_cupom: #12B76A;
+        --azul: #08068D;
+        --escrita_prod: #757575;
+    }
+
+
+    header {
+        width: 100%;
+        height: 12vh;
+        background-color: #08068D;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .conteiener-top {
+        width: 100%;
+        height: 8vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .menu-e-logo {
+        display: flex;
+        justify-content: start;
+        align-items: center;
+        gap: 20px;
+        width: 45%;
+        height: 100%;
+    }
+
+    .conteiner-icones {
+        display: flex;
+        justify-content: end;
+        align-items: center;
+        gap: 20px;
+        width: 45%;
+        height: 100%;
+    }
+
+    /* menu-lateral */
+
+      .menu-lateral {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 270px;
+    height: 100vh;
+    background: #fff;
+    box-shadow: 3px 0 10px rgba(0, 0, 0, 0.15);
+    transition: left 0.3s ease;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+  }
+
+ 
+  .menu-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid #f0f0f0;
+    background-color: #fff;
+  }
+
+  .logo-menu {
+    width: 90px;
+    height: auto;
+  }
+
+  .btn-fechar {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+
+  .btn-fechar:hover {
+    transform: rotate(90deg);
+  }
+
+
+  .menu-lateral.ativo {
+    left: 0;
+  }
+
+  .menu-lista {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    padding: 0 15px;
+    gap: 4px;
+  }
+
+  
+  .menu-lista>li {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .menu-lista>li>a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 400;
+    color: #000;
+    text-decoration: none;
+    transition: 0.3s;
+  }
+
+  .menu-lista>li>a:hover {
+    background-color: #e8e8ff;
+    color: #08068D;
+  }
+
+
+  .categoria-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .categoria-header:hover {
+    background-color: #08068D;
+    color: #fff;
+  }
+
+  .categoria.ativo>.categoria-header {
+    background-color: #08068D;
+    color: #fff;
+  }
+
+
+  .submenu {
+    display: none;
+    flex-direction: column;
+    background-color: #f3f2ff;
+    margin: 5px 0 0 20px;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .categoria.ativo .submenu {
+    display: flex;
+  }
+
+
+  .submenu li {
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .submenu li a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #000;
+    text-decoration: none;
+  }
+
+  .submenu li:hover {
+    background-color: #dfdcff;
+  }
+
+
+  .seta {
+    width: 14px;
+    transition: transform 0.3s ease;
+  }
+
+  .categoria.ativo .seta {
+    transform: rotate(90deg);
+  }
+
+  /* main */
+
+  main{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .conteiner-titulo{
+    width: 100%;
+    height: 10vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #9F9DFB;
+  }
+
+  .titulo{
+    color: white;
+    font-weight: 600;
+  }
+
+  .conteiner-icones-main{
+    width: 90%;
+    height: 10vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: solid lightgray 1px;
+  }
+
+  .conteiner-mensagem{
+    padding-top: 20px;
+    width: 90%;
+    height: 100%;
+  }
+
+  .conteiner-top{
+    width: 100%;
+    display: flex;
+    gap: 10px;
+  }
+
+  .mensagem{
+    display: flex;
+    flex-direction: column;
+    border-left: solid darkgreen 4px;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .top-mensagem{
+    width: 100%;
+    display: flex;
+  }
+
+  .titulo-mensagem{
+    width: 70%;
+    font-weight: 600;
+  }
+
+  .subtitulo-mensagem{
+    color: darkgreen;
+    font-weight: 500;
+  }
+
+}

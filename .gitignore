@@ -1,0 +1,5 @@
+.env
+node_modules/
+src/data/bulbe.db
+src/data/bulbe.db-shm
+src/data/bulbe.db-wal
