@@ -26,6 +26,7 @@
     <div class="conteiner-pesquisa">
       <input type="search" placeholder="Pesquisa...">
       <div><img src="../assets/img/icons/lupa.png" alt="Pesquisar"></div>
+      <aside class="dropdown-pesquisa"></aside>
     </div>
     <div id="cep_completo">
       <div id="cep">
@@ -279,5 +280,47 @@
   <script src="../assets/js/api.js"></script>
   <script src="../assets/js/carrinho-completo.js"></script>
   <script src="../assets/js/menu.js"></script>
+  <script src="../assets/js/barrapesquisa.js"></script>
+  <script src="../assets/js/produto-redirect.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const raw = localStorage.getItem('produtoSelecionado');
+      if (!raw) return;
+      localStorage.removeItem('produtoSelecionado');
+
+      const p = JSON.parse(raw);
+
+      if (p.nome)   document.getElementById('titulo').textContent    = p.nome;
+      if (p.nome)   document.getElementById('descricao').textContent = p.nome;
+      if (p.nome)   document.title = p.nome + ' | Bulbe';
+
+      if (p.imagem) {
+        document.getElementById('img').src = p.imagem;
+        const thumbs = document.querySelector('.thumbs');
+        if (thumbs) thumbs.innerHTML = '';
+      }
+
+      if (p.preco) {
+        const num = p.preco.replace('R$', '').trim();
+        document.getElementById('valorFinal').textContent = num;
+        document.getElementById('valorTotal').textContent = p.preco;
+      }
+
+      const precoNum = parseFloat(
+        (p.preco || '0').replace('R$', '').replace('.', '').replace(',', '.').trim()
+      );
+      const prodData = {
+        id: p.nome.toLowerCase().replace(/\s+/g, '-'),
+        nome: p.nome,
+        preco: precoNum,
+        imagem: p.imagem
+      };
+
+      const addBtn     = document.getElementById('addCarrinho');
+      const comprarBtn = document.getElementById('comprar');
+      if (addBtn)     addBtn.onclick     = function () { adicionarAoCarrinho(prodData); };
+      if (comprarBtn) comprarBtn.onclick = function () { comprarAgora(prodData); };
+    });
+  </script>
 </body>
 </html>
