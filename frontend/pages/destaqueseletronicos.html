@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../assets/css/destaqueeletronicos.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Destaque Casa</title>
+</head>
+<body>
+    <header>
+        <div class="conteiener-top">
+            <div class="menu-e-logo">
+                <img src="../assets/img/icons/menu.png" alt="">
+                <img src="../assets/img/logo.png" alt="">
+            </div>
+            <div class="conteiner-icones">
+                <img src="../assets/img/icons/sino.png" alt="" onclick="window.location.href = '../pages/notificacao.html'">
+                <a href="../pages/carrinho.html"><img src="../assets/img/icons/carrinho.png" alt=""></a>
+                <img src="../assets/img/icons/user.png" onclick="window.location.href = '../pages/usuario.html'">
+            </div>
+            
+        </div>
+        <div class="conteiner-pesquisa">
+            <input type="search" placeholder="Pesquisa...">
+            <div class="lupa"><img src="../assets/img/icons/lupa.png" alt=""></div>
+
+            <aside class="dropdown-pesquisa"></aside>
+        </div>
+        <div id="cep_completo">
+            <div id="cep">
+                <img src="../assets/img/icons/localizacao.png" alt="Localização">
+                <input type="text" placeholder="insira seu CEP">
+            </div>
+        </div>
+    </header>
+    <div class="overlay"></div>
+
+    <nav id="menu-lateral" class="menu-lateral">
+        <div class="menu-top">
+            <img src="../assets/img/logo-azul.png" alt="Logo" class="logo-menu">
+            <img src="../assets/img/icons/x.png" alt="Fechar" class="btn-fechar">
+        </div>
+
+        <ul class="menu-lista">
+            <li>
+                <a href="../index.html"><img src="../assets/img/icons/casa2.png" alt="">Home</a>
+            </li>
+
+            <li class="categoria">
+                <div class="categoria-header">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <img src="../assets/img/icons/categoria.png" alt="">
+                        <span>Categorias</span>
+                    </div>
+                    <img src="../assets/img/icons/seta-direita.png" alt="" class="seta">
+                </div>
+
+                <ul class="submenu">
+                    <li><a href="../pages/destaquecasa.html"><img src="../assets/img/icons/casa2.png" alt="">Casa</a></li>
+                    <li><a href="../pages/destaqueeletrodomesticos.html"><img src="../assets/img/icons/eletrodomestico.png"
+                                alt="">Eletrodoméstico</a></li>
+                    <li><a href="../pages/destaqueseletronicos.html"><img src="../assets/img/icons/eletronico2.png" alt="">Eletrônico</a>
+                    </li>
+                    <li><a href="../pages/destaqueofertas.html"><img src="../assets/img/icons/oferta2.png" alt="">Oferta</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="../pages/carrinho.html"><img src="../assets/img/icons/carrinho2.png" alt="">Carrinho</a>
+            </li>
+
+            <li>
+                <a href="../pages/usuario.html"><img src="../assets/img/icons/user2.png" alt="">Minha conta</a>
+            </li>
+        </ul>
+    </nav>
+
+    <main>
+        <div id="banner"></div>
+        <div class="produtos_finais">
+            <div class="nome">
+                <div class="nome_logo">
+                    <img src="../assets/img/icons/monitor-05.png" alt="">
+                    <p>Eletronicos:</p>
+                </div>
+            </div>
+            <div class="box_produtos">
+                <div class="prod">
+                    <img src="../assets/img/produtos/notbook.png" alt="">
+                    <p>Notebook ThinkPad Lenovo</p>
+                    <h3>R$ 3500,80</h3>
+                    <div class="estrelas">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-vazia.png" alt="">
+                        <p>3,450</p>
+                    </div>
+                </div>
+                <div class="prod">
+                    <img src="../assets/img/produtos/mouse.png" alt="">
+                    <p>Mouse 2200 DPI Alienware</p>
+                    <h3>R$ 699,75</h3>
+                    <div class="cupom"> 
+                        <p>Desconto na fatura</p>
+                    </div>
+                </div>
+                <div class="prod">
+                    <img src="../assets/img/produtos/monitor.png" alt="">
+                    <p>Nonitor Gamer 240hz 1ms</p>
+                    <h3>R$ 1699,90</h3>
+                    <div class="cupom"> 
+                        <p>Desconto na fatura</p>
+                    </div>
+                </div>
+                <div class="prod" id="Cama">
+                    <img class= "img_pequenas" src="../assets/img/produtos/celular.png">
+                    <p>Sansung Galaxy A06</p>
+                    <h3>R$ 899,80</h3>
+                    <div class="estrelas">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-vazia.png" alt="">
+                        <p>3,450</p>
+                    </div>
+                </div>
+                <div class="prod" id="Cama">
+                    <img class= "img_pequenas" src="../assets/img/produtos/notebookasus.png">
+                    <p>Asus Tuf Gaming F15 Rtx 4050</p>
+                    <h3>R$ 6999,80</h3>
+                    <div class="estrelas">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-vazia.png" alt="">
+                        <p>3,450</p>
+                    </div>
+                </div>
+                <div class="prod" id="Cama">
+                    <img class= "img_pequenas" src="../assets/img/produtos/iphone13.png">
+                    <p>Iphone 13 256gb</p>
+                    <h3>R$ 4299,99</h3>
+                    <div class="estrelas">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-vazia.png" alt="">
+                        <p>3,450</p>
+                    </div>
+                </div>
+            </div>
+            <div class="box_produtos" id="Box2">
+                <div class="prod">
+                    <img src="../assets/img/produtos/notebookasus.png" alt="">
+                    <p>Notebook Asus Tuf Gaming F15</p>
+                    <h3>R$ 6999,80</h3>
+                    <div class="cupom"> 
+                        <p>Desconto na fatura</p>
+                    </div>
+                        
+                </div>
+                <div class="prod">
+                    <img src="../assets/img/produtos/iphone13.png" alt="">
+                    <p>iphone 13 256gb</p>
+                    <h3>R$ 4299,75</h3>
+                    <div class="cupom"> 
+                        <p>Desconto na fatura</p>
+                    </div>
+                </div>
+                <div class="prod">
+                    <img src="../assets/img/produtos/sansungs23.png" alt="">
+                    <p>Sansung Galaxy S23 128gb</p>
+                    <h3>R$ 2199,90</h3>
+                    <div class="estrelas">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-vazia.png" alt="">
+                        <p>3,450</p>
+                    </div>
+                </div>
+                <div class="prod" id="Cama">
+                    <img class= "img_pequenas" src="../assets/img/produtos/5070.png">
+                    <p>RTX 5070 16gb GALAX</p>
+                    <h3>R$ 13999,80</h3>
+                    <div class="estrelas">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-vazia.png" alt="">
+                        <p>3,450</p>
+                    </div>
+                </div>
+                <div class="prod" id="Cama">
+                    <img class= "img_pequenas" src="../assets/img/produtos/aspirador.png">
+                    <p>Aspirador de casa Ultra Potente</p>
+                    <h3>R$ 235,80</h3>
+                    <div class="estrelas">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-vazia.png" alt="">
+                        <p>3,450</p>
+                    </div>
+                </div>
+                <div class="prod" id="Cama">
+                    <img class= "img_pequenas" src="./assets/img/produtos/aquecedor.png">
+                    <p>Aquecedor Smart Hot</p>
+                    <h3>R$ 85,90</h3>
+                    <div class="estrelas">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-cheia.png" alt="">
+                        <img src="../assets/img/icons/estrela-vazia.png" alt="">
+                        <p>3,450</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+          <div class="footer-main">
+            <div class="footer-brand">
+              <img src="../assets/img/logo.png" alt="Bulbe" class="footer-logo">
+              <p class="footer-tagline">Iluminando sua vida com as melhores ofertas</p>
+            </div>
+            
+            <div class="footer-links">
+                <div class="footer-column">
+                  <h4 onclick="window.location.href = './pages/usuario.html'">Minha Conta</h4>
+                </div>
+                
+                <div class="footer-column">
+                  <h4 onclick="window.location.href = '../index.html'">Início</h4>
+                </div>
+              
+              <div class="footer-column">
+                <h4>Atendimento</h4>
+                
+              </div>
+            </div>
+          </div>
+          
+          <div class="footer-bottom">
+            
+              </div>
+              
+              <div class="security-seal">
+            </div>
+            
+            <div class="footer-copyright">
+              <small>© 2025 Bulbe - Todos os direitos reservados</small>
+              <small>CNPJ: 12.345.678/0001-90</small>
+            </div>
+          </div>
+        </div>
+    </footer>
+
+    <script src="../assets/js/menu.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/barrapesquisa.js"></script>
+    <script src="../assets/js/produto-redirect.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lâmpada Super Bulbo | Bulbe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/produtos.css">
+</head>
+<body>
+  <header>
+    <div class="conteiner-top">
+      <div class="menu-e-logo">
+        <img src="../assets/img/icons/menu.png" alt="Menu" onclick="abrirMenu()">
+        <img src="../assets/img/logo.png" alt="Bulbe" onclick="window.location.href = '../index.html'">
+      </div>
+      <div class="conteiner-icones">
+        <img src="../assets/img/icons/sino.png" alt="" onclick="window.location.href = './notificacao.html'">
+        <a href="./carrinho.html" style="position: relative; display: inline-block;">
+            <img src="../assets/img/icons/carrinho.png" alt="">
+            <span class="contador-carrinho">0</span>
+        </a>
+        <img src="../assets/img/icons/user.png" alt="" onclick="window.location.href='./usuario.html'">
+      </div>
+    </div>
+    <div class="conteiner-pesquisa">
+      <input type="search" placeholder="Pesquisa...">
+      <div><img src="../assets/img/icons/lupa.png" alt="Pesquisar"></div>
+      <aside class="dropdown-pesquisa"></aside>
+    </div>
+    <div id="cep_completo">
+      <div id="cep">
+        <img src="../assets/img/icons/localizacao.png" alt="Localização">
+        <input type="text" placeholder="insira seu CEP">
+      </div>
+    </div>
+  </header>
+
+  <div class="overlay"></div>
+
+  <nav id="menu-lateral" class="menu-lateral">
+        <div class="menu-top">
+            <img src="../assets/img/logo-azul.png" alt="Logo" class="logo-menu">
+            <img src="../assets/img/icons/x.png" alt="Fechar" class="btn-fechar" onclick="fecharMenu()">
+        </div>
+
+        <ul class="menu-lista">
+            <li>
+                <a href="../index.html"><img src="../assets/img/icons/home.png" alt="">Home</a>
+            </li>
+
+            <li class="categoria">
+                <div class="categoria-header">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <img src="../assets/img/icons/categoria.png" alt="">
+                        <span>Categorias</span>
+                    </div>
+                    <img src="../assets/img/icons/seta-direita.png" alt="" class="seta">
+                </div>
+
+                <ul class="submenu">
+                    <li><a href="./destaquecasa.html"><img src="../assets/img/icons/casa2.png" alt="">Casa</a></li>
+                    <li><a href="./destaqueeletrodomesticos.html"><img src="../assets/img/icons/eletrodomestico.png" alt="">Eletrodoméstico</a></li>
+                    <li><a href="./destaqueseletronicos.html"><img src="../assets/img/icons/eletronico2.png" alt="">Eletrônico</a></li>
+                    <li><a href="./destaqueofertas.html"><img src="../assets/img/icons/oferta2.png" alt="">Oferta</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="./carrinho.html"><img src="../assets/img/icons/carrinho2.png" alt="">Carrinho</a>
+            </li>
+
+            <li>
+                <a href="./usuario.html"><img src="../assets/img/icons/user2.png" alt="">Minha conta</a>
+            </li>
+        </ul>
+    </nav>
+
+  <main class="container">
+    <section class="product-card">
+      <div class="product-info">
+        <h1 class="title" id="titulo">Lâmpada Super Bulbo LED T 30W 6500K Elgin Bivolt Luz Branca Fria</h1>
+        <a class="store-link" href="#">Visite a Loja Elgin</a>
+
+        <div class="gallery">
+          <div class="main-image">
+            <img src="../assets/img/produtos/lampada.png" alt="Lâmpada Elgin" id="img">
+          </div>
+          <div class="thumbs">
+            <img src="../assets/img/produtos/lampada2.png" alt="Vista frontal da lâmpada">
+            <img src="../assets/img/produtos/lampada3.png" alt="Lâmpada na embalagem">
+            <img src="../assets/img/produtos/lampada4.png" alt="Vista lateral da lâmpada">
+            <img src="../assets/img/produtos/lampada5.png" alt="Detalhe do bulbo">
+          </div>
+        </div>
+
+        <h2>Descrição Do Produto</h2>
+        <p class="description" id="descricao">Possuir uma boa iluminação nos espaços em que estamos influencia a maneira como nos sentimos, relaxamos, trabalhamos ou estudamos. É por isso que a lâmpada da Elgin Super Bulbo 30 W pode ser uma excelente opção se você quiser criar um ambiente agradável e funcional.</p>
+
+        <div class="price-card">
+          <div class="promo">Maio/25<br><small>Promoção até o dia 06/06/25</small></div>
+          <div class="prices">
+            <div class="old">De <span class="strike" id="valorTotal">R$ 182,03</span> por</div>
+            <div class="big">R$ <span class="price" id="valorFinal">99,90</span></div>
+          </div>
+          <div class="discount">Desconto Bulbe: <strong>R$ 82,03</strong></div>
+        </div>
+
+          <div class="cta-row">
+            <button class="primary" id="addCarrinho" onclick="adicionarAoCarrinho({
+                id: 'lampada-elgin-001', produtoId: 1,
+                nome: 'Lâmpada Super Bulbo LED T 30W 6500K Elgin Bivolt Luz Branca Fria',
+                preco: 99.90,
+                imagem: './assets/img/produtos/lampada.png'
+            })">Adicionar ao Carrinho</button>
+            <button class="secondary" id="comprar" onclick="window.location.href = './lead.html'">
+                <p>Comprar</p>
+            </button>
+          </div>
+    </section>
+
+    <aside class="promo-card">
+      <div class="promo-inner">
+        <p>Até hoje você já economizou:</p>
+        <div class="savings">R$ <strong>82,03</strong></div>
+        <a class="cta-link" href="#">Ver minhas economias &gt;</a>
+      </div>
+    </aside>
+
+     <!-- Seção de Avaliações -->
+    <section class="reviews-section">
+      <div class="reviews-header">
+        <h3 class="reviews-title">Avaliações do Produto</h3>
+        <button class="add-review-btn">+ Adicionar Avaliação</button>
+      </div>
+
+      <div class="review-card">
+        <div class="review-header">
+          <span class="reviewer-name">Gabriel Manata</span>
+          <span class="review-date">Há cerca de 3 dias atrás</span>
+        </div>
+        <div class="review-rating">★★★★★</div>
+        <p class="review-text">Produto excelente! A lâmpada tem uma ótima iluminação e já estou usando há algumas semanas. Super recomendo!</p>
+      </div>
+
+      <div class="review-card">
+        <div class="review-header">
+          <span class="reviewer-name">Maria Silva</span>
+          <span class="review-date">Há 1 semana atrás</span>
+        </div>
+        <div class="review-rating">★★★★☆</div>
+        <p class="review-text">Muito boa a lâmpada, porém a luz branca é mais forte do que eu esperava. Mas a qualidade é ótima.</p>
+      </div>
+
+      <div class="review-card">
+        <div class="review-header">
+          <span class="reviewer-name">João Santos</span>
+          <span class="review-date">Há 2 semanas atrás</span>
+        </div>
+        <div class="review-rating">★★★★★</div>
+        <p class="review-text">Perfeita para meu escritório! Economiza energia e ilumina muito bem. Entrega rápida também.</p>
+      </div>
+
+      <!-- Formulário de Avaliação (inicialmente oculto) -->
+      <div class="review-form" id="reviewForm" style="display: none;">
+        <h4>Deixe sua avaliação</h4>
+        <div class="form-group">
+          <label for="reviewerName">Seu nome</label>
+          <input type="text" id="reviewerName" placeholder="Digite seu nome">
+        </div>
+        <div class="form-group">
+          <label>Avaliação</label>
+          <div class="rating-stars">
+            <span class="star" data-rating="1">★</span>
+            <span class="star" data-rating="2">★</span>
+            <span class="star" data-rating="3">★</span>
+            <span class="star" data-rating="4">★</span>
+            <span class="star" data-rating="5">★</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="reviewText">Comentário</label>
+          <textarea id="reviewText" placeholder="Compartilhe sua experiência com o produto"></textarea>
+        </div>
+        <button class="submit-review">Enviar Avaliação</button>
+      </div>
+    </section>
+
+    <section class="also-like">
+      <h3>Você também pode gostar:</h3>
+      <div class="grid">
+        <div class="card">
+          <img src="../assets/img/produtos/abajur.png" alt="Abajur Luxuoso">
+          <div class="card-title">Abajur Luxuoso</div>
+          <div class="card-price">R$ 35,80</div>
+          <button class="btn-carrinho" onclick="adicionarAoCarrinho({
+            id: 'abajur-produto-001', produtoId: 2,
+            nome: 'Abajur Luxuoso',
+            preco: 35.80,
+            imagem: './assets/img/produtos/abajur.png'
+          })">Adicionar ao Carrinho</button>
+        </div>
+        <div class="card">
+          <img src="../assets/img/produtos/cadeira.png" alt="Cadeira 4 Pernas Forro Branco">
+          <div class="card-title">Cadeira 4 Pernas Forro Branco</div>
+          <div class="card-price">R$ 15,75</div>
+          <button class="btn-carrinho" onclick="adicionarAoCarrinho({
+            id: 'cadeira-produto-001', produtoId: 3,
+            nome: 'Cadeira 4 Pernas Forro Branco',
+            preco: 15.75,
+            imagem: './assets/img/produtos/cadeira.png'
+          })">Adicionar ao Carrinho</button>
+        </div>
+        <div class="card">
+          <img src="../assets/img/produtos/shopping.webp" alt="Luminária de Mesa">
+          <div class="card-title">Luminária de Mesa</div>
+          <div class="card-price">R$ 42,90</div>
+          <button class="btn-carrinho" onclick="adicionarAoCarrinho({
+            id: 'luminaria-produto-001', produtoId: 4,
+            nome: 'Luminária de Mesa',
+            preco: 42.90,
+            imagem: './assets/img/produtos/shopping.webp'
+          })">Adicionar ao Carrinho</button>
+        </div>
+        <div class="card">
+          <img src="../assets/img/produtos/shopping (1).webp" alt="Kit de Lâmpadas">
+          <div class="card-title">Kit de Lâmpadas LED</div>
+          <div class="card-price">R$ 67,50</div>
+          <button class="btn-carrinho" onclick="adicionarAoCarrinho({
+            id: 'kit-lampadas-produto-001', produtoId: 5,
+            nome: 'Kit de Lâmpadas LED',
+            preco: 67.50,
+            imagem: './assets/img/produtos/shopping (1).webp'
+          })">Adicionar ao Carrinho</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="big-banner">
+      <img src="../assets/img/banner/indicacao.png" alt="Indique amigos e ganhe descontos">
+    </div>
+  </main>
+
+<footer class="site-footer">
+  <div class="footer-container">
+    <div class="footer-main">
+      <div class="footer-brand">
+        <img src="../assets/img/logo.png" alt="Bulbe" class="footer-logo">
+        <p class="footer-tagline">Iluminando sua vida com as melhores ofertas</p>
+      </div>
+      
+      <div class="footer-links">
+        <div class="footer-column">
+          <h4 onclick="window.location.href = 'usuario.html'">Minha Conta</h4>
+        </div>
+        
+        <div class="footer-column">
+          <h4 onclick="window.location.href = '../index.html'">Início</h4>
+        </div>
+        
+        <div class="footer-column">
+          <h4>Atendimento</h4>
+          <ul>
+            <li><a href="#" onclick="abrirFluxoNegativo()">Problemas com pedido?</a></li>
+            <li><a href="./suporte.html">Central de Ajuda</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer-bottom">
+      <div class="footer-copyright">
+        <small>© 2025 Bulbe - Todos os direitos reservados</small>
+        <small>CNPJ: 12.345.678/0001-90</small>
+      </div>
+    </div>
+  </div>
+</footer>
+
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/carrinho-completo.js"></script>
+  <script src="../assets/js/menu.js"></script>
+  <script src="../assets/js/barrapesquisa.js"></script>
+  <script src="../assets/js/produto-redirect.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const raw = localStorage.getItem('produtoSelecionado');
+      if (!raw) return;
+      localStorage.removeItem('produtoSelecionado');
+
+      const p = JSON.parse(raw);
+
+      if (p.nome)   document.getElementById('titulo').textContent    = p.nome;
+      if (p.nome)   document.getElementById('descricao').textContent = p.nome;
+      if (p.nome)   document.title = p.nome + ' | Bulbe';
+
+      if (p.imagem) {
+        document.getElementById('img').src = p.imagem;
+        const thumbs = document.querySelector('.thumbs');
+        if (thumbs) thumbs.innerHTML = '';
+      }
+
+      if (p.preco) {
+        const num = p.preco.replace('R$', '').trim();
+        document.getElementById('valorFinal').textContent = num;
+        document.getElementById('valorTotal').textContent = p.preco;
+      }
+
+      const precoNum = parseFloat(
+        (p.preco || '0').replace('R$', '').replace('.', '').replace(',', '.').trim()
+      );
+      const prodData = {
+        id: p.nome.toLowerCase().replace(/\s+/g, '-'),
+        nome: p.nome,
+        preco: precoNum,
+        imagem: p.imagem
+      };
+
+      const addBtn     = document.getElementById('addCarrinho');
+      const comprarBtn = document.getElementById('comprar');
+      if (addBtn)     addBtn.onclick     = function () { adicionarAoCarrinho(prodData); };
+      if (comprarBtn) comprarBtn.onclick = function () { comprarAgora(prodData); };
+    });
+  </script>
+</body>
+</html>

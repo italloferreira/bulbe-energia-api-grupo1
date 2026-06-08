@@ -179,7 +179,7 @@ function listarPorCategoria(req, res) {
     produtos: resultado
   });
 }
- 
+
 module.exports = {
   listarCatalogoHome,
   listarProdutos,

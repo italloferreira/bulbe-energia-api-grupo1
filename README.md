@@ -1,122 +1,106 @@
-## 📋 Sobre o Projeto ⬅️
+# Bulbe — Projeto Fullstack (Frontend + Backend integrados)
 
-A **Bulbe Energia API** é o backend de um sistema voltado para venda, consulta e gerenciamento de produtos relacionados à energia, eletrônicos e soluções sustentáveis.  
-Nesta etapa, a API disponibiliza recursos para listagem de produtos, consulta de detalhes, filtros por categoria, vitrines de destaque/ofertas e gerenciamento básico de carrinho.  
-O projeto está sendo desenvolvido de forma incremental para a disciplina de Projeto de Desenvolvimento Backend — IBMEC, com evolução prevista para autenticação, checkout, pedidos, documentação OpenAPI e integração futura com banco de dados.
+Este projeto une **dois trabalhos da faculdade** em uma única aplicação que roda
+em **um só servidor**:
 
----
+- **Backend (API):** `bulbe-energia-api-grupo1` — Node.js + Express + SQLite
+- **Frontend (loja):** `Projeto-BulbeShop` — HTML, CSS e JS (servido em `frontend/`)
 
-## 🏗️ Arquitetura
-
-O projeto utiliza uma arquitetura em camadas baseada no padrão **MVC simplificado**, separando as responsabilidades principais da aplicação:
-
-- **app.js**: ponto de entrada da aplicação. Configura o Express, habilita JSON, CORS e registra as rotas da API.
-- **routes/**: camada responsável por definir os endpoints HTTP e direcionar cada requisição para o controller correto.
-- **controllers/**: camada que concentra a lógica de cada recurso, como validações, filtros, busca de produtos, cálculo de carrinho e retorno das respostas JSON.
-- **data/** e arquivos de dados em memória: simulam uma base de dados temporária durante a fase inicial do projeto.
-- **middlewares/**: camada preparada para comportamentos intermediários, como autenticação via JWT.
-
-No estágio atual, a API trabalha com dados em memória, sem banco de dados real. Isso facilita o desenvolvimento inicial e os testes dos fluxos principais antes da introdução de ORM, persistência e autenticação completa nas próximas sprints.
+O Express serve a loja **e** a API na mesma origem (`http://localhost:3000`),
+então **não há problema de CORS** e **todas as imagens continuam funcionando**
+(são servidas como arquivos estáticos).
 
 ---
 
-## 🔧 Tecnologias
+## Como rodar
 
-- **Node.js 18+**: ambiente de execução JavaScript no backend.
-- **Express.js**: framework utilizado para criação da API REST.
-- **CORS**: middleware para permitir requisições entre frontend e backend em ambientes diferentes.
-- **JSON**: formato padrão de entrada e saída de dados da API.
-- **bcryptjs**: biblioteca prevista/utilizada para criptografia de senhas de usuários.
-- **jsonwebtoken**: biblioteca prevista/utilizada para autenticação com tokens JWT.
-- **Nodemon**: ferramenta de apoio ao desenvolvimento para reiniciar o servidor automaticamente.
-- **Prettier**: ferramenta para padronização da formatação do código.
-- **OpenAPI 3.1**: padrão adotado para documentação progressiva dos endpoints da API.
-
----
-
-## ⚙️ Como Executar Localmente
-
-### Pré-requisitos
-
-Antes de executar o projeto, é necessário ter instalado:
-
-- Node.js 18 ou superior
-- npm
-- Git
-
-### Passo a passo
-
-1. Clone o repositório:
+Pré-requisito: **Node.js 18+** instalado.
 
 ```bash
-git clone https://github.com/italloferreira/bulbe-energia-api-grupo1.git
-```
-
-2. Acesse a pasta do projeto:
-
-```bash
-cd bulbe-energia-api-grupo1
-```
-
-3. Instale as dependências:
-
-```bash
+# 1. Instalar dependências
 npm install
-```
 
-4. Crie o arquivo `.env` com base no `.env.example`:
-
-```bash
-cp .env.example .env
-```
-
-Exemplo de configuração:
-
-```env
-PORT=3000
-JWT_SECRET=chave-secreta-dev
-```
-
-5. Execute a aplicação:
-
-```bash
+# 2. Iniciar o servidor
 npm start
 ```
 
-Ou, em ambiente de desenvolvimento:
+Depois abra no navegador:
 
-```bash
-npm run dev
+- **Loja (frontend):** http://localhost:3000/
+- **API (backend):**   http://localhost:3000/api
+- **Swagger (docs):**  http://localhost:3000/api-docs
+
+> Na primeira execução, o banco `src/data/bulbe.db` é criado e populado
+> automaticamente com o catálogo de produtos e os cupons.
+
+---
+
+## O que foi integrado (frontend ↔ backend)
+
+| Funcionalidade | Como ficou |
+|---|---|
+| **Login / Cadastro** | Página "Minha conta" (`/pages/usuario.html`) agora tem login e cadastro reais, com **JWT** salvo no navegador. |
+| **Meus pedidos** | Quando logado, a conta lista os pedidos reais vindos da API. |
+| **Catálogo** | A API (`/api/v1/...`) devolve os mesmos produtos da loja, usando as **imagens locais** (nada de URLs quebradas). |
+| **Busca** | A barra de pesquisa consulta `/api/v1/produtos?search=` (com fallback offline). |
+| **Cupom** | No checkout, o cupom é validado de verdade em `/api/cupons/validar` (ex.: `BULBE10`, `BULBE20`, `FRETEGRATIS`). |
+| **Frete** | Endpoint `/api/frete/calcular` disponível para cálculo por CEP. |
+| **Pedido + PIX** | "Finalizar compra" cria um **pedido real** (`/api/pedidos`) e gera uma **cobrança PIX com QR Code** (`/api/pagamentos/pix`), exibida na tela de conclusão. |
+| **Suporte** | O formulário de suporte abre um **chamado real** (`/api/suporte/chamados`) e mostra o protocolo. |
+
+> Observação: o checkout só cria pedido no backend quando o usuário está
+> **logado**. Sem login, o fluxo continua funcionando de forma simulada
+> (como era antes), sem quebrar a navegação.
+
+### Cupons de teste já cadastrados
+- `BULBE10` — 10% de desconto
+- `BULBE20` — 20% (mínimo R$ 50)
+- `DESCONTO20` — 20%
+- `FRETEGRATIS` — frete grátis
+
+---
+
+## Estrutura
+
+```
+bulbe-fullstack/
+├── app.js                 # Servidor Express (API + serve o frontend)
+├── package.json
+├── docs/
+│   └── openapi.yaml        # Documentação Swagger
+├── src/
+│   ├── controllers/        # Lógica da API
+│   ├── routes/             # Rotas da API
+│   ├── middlewares/        # Autenticação JWT
+│   ├── services/           # Gateway PIX (mock)
+│   └── data/
+│       ├── db.js           # Schema + seed do catálogo/cupons
+│       └── bulbe.db        # (gerado automaticamente)
+└── frontend/               # A loja BulbeShop
+    ├── index.html
+    ├── pages/
+    └── assets/
+        ├── css/
+        ├── img/            # Imagens (intactas)
+        └── js/
+            ├── api.js       # NOVO: camada central de integração com a API
+            ├── conta.js     # NOVO: login/cadastro/conta
+            └── ...          # demais scripts da loja
 ```
 
-6. Acesse a API no navegador ou em uma ferramenta como Postman/Insomnia:
+---
 
-```text
-http://localhost:3000
-```
+## Correções aplicadas na integração
+- **Bug que derrubava o servidor no Linux:** o arquivo `Pagamentocontroller.js`
+  tinha letra maiúscula divergente do `require`. Renomeado para
+  `pagamentoController.js`.
+- Caminho quebrado do `barrapesquisa.js` nas páginas de categoria corrigido
+  (`./assets` → `../assets`) e script tornado à prova de falhas.
 
-Resposta esperada:
+---
 
-```json
-{
-  "mensagem": "API Bulbe Energia funcionando!"
-}
-```
-
-### Exemplos de rotas disponíveis no estágio atual
-
-```text
-GET    /api/v1/catalogo/home
-GET    /api/v1/produtos
-GET    /api/v1/produtos?search=lampada
-GET    /api/v1/produtos/destaques
-GET    /api/v1/produtos/ofertas
-GET    /api/v1/produtos/categoria/casa
-GET    /api/v1/produtos/1
-GET    /api/v1/carrinho
-POST   /api/v1/carrinho/itens
-PATCH  /api/v1/carrinho/itens/1
-DELETE /api/v1/carrinho/itens/1
-```
-
-> Observação: antes de executar, verifique se o caminho de importação dos produtos está correto no controller. No projeto atual, o arquivo de produtos está em `src/produtos.js`, então o import em `produtoController.js` deve apontar para `../produtos` ou o arquivo deve ser movido para `src/data/produtos.js`.
+## Notas
+- As notificações de suporte por **e-mail/Slack** são **opcionais**. Sem as
+  variáveis no `.env`, o chamado é criado normalmente e a notificação é apenas
+  ignorada (não quebra nada).
+- A documentação original do backend está em `README-backend.md`.
