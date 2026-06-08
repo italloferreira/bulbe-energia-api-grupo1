@@ -26,6 +26,7 @@
     <div class="conteiner-pesquisa">
       <input type="search" placeholder="Pesquisa...">
       <div><img src="../assets/img/icons/lupa.png" alt="Pesquisar"></div>
+      <aside class="dropdown-pesquisa"></aside>
     </div>
     <div id="cep_completo">
       <div id="cep">
@@ -112,12 +113,7 @@
                 preco: 99.90,
                 imagem: './assets/img/produtos/lampada.png'
             })">Adicionar ao Carrinho</button>
-            <button class="secondary" id="comprar" onclick="comprarAgora({
-                id: 'lampada-elgin-001', produtoId: 1,
-                nome: 'Lâmpada Super Bulbo LED T 30W 6500K Elgin Bivolt Luz Branca Fria',
-                preco: 99.90,
-                imagem: './assets/img/produtos/lampada.png'
-            })">
+            <button class="secondary" id="comprar" onclick="window.location.href = './lead.html'">
                 <p>Comprar</p>
             </button>
           </div>
@@ -284,6 +280,8 @@
   <script src="../assets/js/api.js"></script>
   <script src="../assets/js/carrinho-completo.js"></script>
   <script src="../assets/js/menu.js"></script>
+  <script src="../assets/js/barrapesquisa.js"></script>
+  <script src="../assets/js/produto-redirect.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const raw = localStorage.getItem('produtoSelecionado');
@@ -292,9 +290,9 @@
 
       const p = JSON.parse(raw);
 
-      if (p.nome)  document.getElementById('titulo').textContent    = p.nome;
-      if (p.nome)  document.getElementById('descricao').textContent = p.nome;
-      if (p.nome)  document.title = p.nome + ' | Bulbe';
+      if (p.nome)   document.getElementById('titulo').textContent    = p.nome;
+      if (p.nome)   document.getElementById('descricao').textContent = p.nome;
+      if (p.nome)   document.title = p.nome + ' | Bulbe';
 
       if (p.imagem) {
         document.getElementById('img').src = p.imagem;
@@ -318,9 +316,9 @@
         imagem: p.imagem
       };
 
-      const addBtn    = document.getElementById('addCarrinho');
+      const addBtn     = document.getElementById('addCarrinho');
       const comprarBtn = document.getElementById('comprar');
-      if (addBtn)    addBtn.onclick    = function () { adicionarAoCarrinho(prodData); };
+      if (addBtn)     addBtn.onclick     = function () { adicionarAoCarrinho(prodData); };
       if (comprarBtn) comprarBtn.onclick = function () { comprarAgora(prodData); };
     });
   </script>

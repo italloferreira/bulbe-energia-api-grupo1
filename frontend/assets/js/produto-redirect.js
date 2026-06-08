@@ -1,6 +1,6 @@
 (function () {
-  const isRoot = !window.location.pathname.includes('/pages/');
-  const produtoUrl = isRoot ? './pages/produtos.html' : './produtos.html';
+  const isPages = window.location.pathname.includes('/pages/');
+  const produtoUrl = isPages ? './produtos.html' : './pages/produtos.html';
 
   function irParaProduto(nome, imagem, preco) {
     localStorage.setItem('produtoSelecionado', JSON.stringify({ nome, imagem, preco }));
@@ -8,7 +8,6 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    // Lamp destaque card — remove onclick hardcoded e limpa seleção pra cair no padrão
     const lampCard = document.getElementById('Lampada');
     if (lampCard) {
       lampCard.removeAttribute('onclick');
@@ -26,9 +25,24 @@
         const nome  = card.querySelector('p');
         const preco = card.querySelector('h3');
         irParaProduto(
-          nome  ? nome.textContent.trim()  : '',
-          img   ? img.getAttribute('src')  : '',
-          preco ? preco.textContent.trim() : ''
+          nome  ? nome.textContent.trim() : '',
+          img   ? img.src                 : '',
+          preco ? preco.textContent.trim(): ''
+        );
+      });
+    });
+
+    document.querySelectorAll('.card').forEach(function (card) {
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', function (e) {
+        if (e.target.closest('.btn-carrinho')) return;
+        const img   = card.querySelector('img');
+        const nome  = card.querySelector('.card-title');
+        const preco = card.querySelector('.card-price');
+        irParaProduto(
+          nome  ? nome.textContent.trim() : '',
+          img   ? img.src                 : '',
+          preco ? preco.textContent.trim(): ''
         );
       });
     });
