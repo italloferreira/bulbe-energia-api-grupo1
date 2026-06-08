@@ -93,24 +93,9 @@ gerarDadosPedido() {
             const envio = dadosCompra.tipoEnvio;
             elementoEntrega.textContent = envio === 'expresso' ? '1-2 dias úteis' : '5-7 dias úteis';
         }
-        
-        // INTEGRAÇÃO: exibe o QR Code PIX gerado pelo backend (se houver)
-        if (dadosCompra.pix && dadosCompra.pix.qrCodeUrl) {
-            const resumo = document.querySelector('.resumo-pedido');
-            if (resumo && !document.getElementById('pix-bloco')) {
-                const bloco = document.createElement('div');
-                bloco.id = 'pix-bloco';
-                bloco.style.cssText = 'margin-top:18px;padding:18px;background:#f8f9ff;border-radius:12px;text-align:center;';
-                bloco.innerHTML =
-                    '<h3 style="color:#08068D;margin-bottom:10px;">Pague com PIX</h3>' +
-                    '<img src="' + dadosCompra.pix.qrCodeUrl + '" alt="QR Code PIX" style="width:200px;height:200px;border-radius:8px;">' +
-                    '<p style="margin-top:10px;font-weight:600;">Valor: R$ ' + Number(dadosCompra.pix.valor || 0).toFixed(2) + '</p>' +
-                    '<p style="font-size:12px;color:#536679;margin-top:6px;">PIX copia e cola:</p>' +
-                    '<textarea readonly style="width:100%;max-width:340px;height:60px;margin-top:6px;font-size:11px;border:1px solid #ddd;border-radius:8px;padding:8px;">' +
-                    (dadosCompra.pix.pixCopiaECola || '') + '</textarea>';
-                resumo.appendChild(bloco);
-            }
-        }
+
+        // (O QR Code do PIX agora é exibido no pop-up durante o checkout,
+        //  não nesta tela de conclusão.)
 
         // Limpar dados do localStorage após usar
         localStorage.removeItem('ultimaCompra');

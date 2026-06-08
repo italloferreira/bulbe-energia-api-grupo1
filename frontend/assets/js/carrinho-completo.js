@@ -253,3 +253,20 @@ document.addEventListener('DOMContentLoaded', function () {
 // Exportar
 window.atualizarContadorCarrinho = atualizarContadorCarrinho;
 window.mostrarNotificacao = mostrarNotificacao;
+
+// ========== COMPRAR AGORA (rota direta, estilo Mercado Livre) ==========
+// Adiciona o produto ao carrinho e leva direto ao checkout.
+// Se não estiver logado, manda para o login e volta para finalizar.
+window.comprarAgora = function (produto) {
+    const ok = window.adicionarAoCarrinho(produto);
+    if (ok === false) {
+        mostrarNotificacao('❌ Não foi possível adicionar o produto.');
+        return;
+    }
+    if (window.BulbeAPI && window.BulbeAPI.estaLogado()) {
+        window.location.href = './lead.html';
+    } else {
+        localStorage.setItem('redirecionarApos', './lead.html');
+        window.location.href = './usuario.html';
+    }
+};

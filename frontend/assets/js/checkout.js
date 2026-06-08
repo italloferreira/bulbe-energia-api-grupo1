@@ -1,9 +1,54 @@
-const inputCep = document.getElementById("cep");
-const dados = JSON.parse(localStorage.getItem('dadosEntrega'));
+// ---- Proteção de etapa + seletor de CEP com endereços salvos da conta ----
+(function () {
+  const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
 
-if (inputCep && dados) {
-    inputCep.textContent = dados.cep;
-}
+  // Sem login -> volta para login (mantém destino)
+  if (!(window.BulbeAPI && BulbeAPI.estaLogado())) {
+    localStorage.setItem('redirecionarApos', './checkout.html');
+    window.location.href = './usuario.html';
+    return;
+  }
+  // Carrinho vazio -> volta para o carrinho
+  if (carrinho.length === 0) {
+    window.location.href = './carrinho.html';
+    return;
+  }
+
+  // Popular o <select> de CEP com os endereços salvos do usuário
+  document.addEventListener('DOMContentLoaded', () => {
+    const select = document.querySelector('.select-cep');
+    if (!select) return;
+
+    const enderecos = (BulbeAPI.listarEnderecos && BulbeAPI.listarEnderecos()) || [];
+    const atual = JSON.parse(localStorage.getItem('dadosEntrega') || '{}');
+
+    select.innerHTML = '';
+
+    if (!enderecos.length) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'Nenhum endereço salvo — preencha seus dados';
+      select.appendChild(opt);
+      return;
+    }
+
+    enderecos.forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e.cep;
+      const label = (e.endereco ? e.endereco + ' — ' : '') + 'CEP ' + e.cep;
+      opt.textContent = label;
+      if (atual && atual.cep === e.cep) opt.selected = true;
+      select.appendChild(opt);
+    });
+
+    // Ao trocar o CEP, atualiza o endereço de entrega desta compra
+    select.addEventListener('change', (ev) => {
+      const cepEscolhido = ev.target.value;
+      const end = enderecos.find(e => e.cep === cepEscolhido);
+      if (end) localStorage.setItem('dadosEntrega', JSON.stringify(end));
+    });
+  });
+})();
 
 class Checkout {
     constructor() {
@@ -529,7 +574,12 @@ class Checkout {
         }
 
         try {
-            const pedido = await BulbeAPI.criarPedido(payload);
+            // O pedido é criado AQUI (só no Finalizar compra)
+            let pedido = this.pedidoCriado;
+            if (!pedido) {
+                pedido = await BulbeAPI.criarPedido(payload);
+                this.pedidoCriado = pedido;
+            }
 
             const compra = {
                 numeroPedido: pedido.id,
@@ -542,7 +592,8 @@ class Checkout {
             // Gera cobrança PIX quando for o método escolhido
             if (metodoPagamento === 'pix') {
                 try {
-                    const pix = await BulbeAPI.criarPagamentoPix(pedido.id);
+                    const pix = this.pixGerado || await BulbeAPI.criarPagamentoPix(pedido.id);
+                    this.pixGerado = pix;
                     compra.pix = {
                         pagamentoId: pix.pagamentoId,
                         valor: pix.valor,
@@ -555,9 +606,25 @@ class Checkout {
             }
 
             localStorage.setItem('ultimaCompra', JSON.stringify(compra));
-            localStorage.setItem('carrinho', JSON.stringify([])); // limpa carrinho
+            // Limpa o carrinho e o endereço temporário desta compra.
+            // Os endereços salvos da CONTA são preservados (bulbe_enderecos_*).
+            localStorage.setItem('carrinho', JSON.stringify([]));
+            localStorage.removeItem('dadosEntrega');
 
             this.mostrarNotificacao('🎊 Pedido ' + pedido.id + ' criado com sucesso!', 'success');
+
+            // PIX -> abre o pop-up com o QR Code real. A ida para a tela de
+            // conclusão acontece quando o usuário clicar em "Já paguei".
+            if (metodoPagamento === 'pix' && compra.pix) {
+                if (btnFinalizar) {
+                    btnFinalizar.textContent = 'Aguardando pagamento PIX...';
+                    btnFinalizar.style.background = '#536679';
+                }
+                this.mostrarModalPix();
+                return;
+            }
+
+            // Outros métodos (cartão/boleto) -> direto para a conclusão.
             if (btnFinalizar) {
                 btnFinalizar.textContent = '✅ Redirecionando...';
                 btnFinalizar.style.background = '#26D07C';
@@ -603,26 +670,9 @@ simularProcessamento(metodoPagamento, tipoEnvio) {
 
     // MODAL PIX
     setupModalPix() {
-        const metodoPix = document.querySelector('.metodo[data-metodo="pix"]');
-        
-        if (metodoPix) {
-            let cliqueCount = 0;
-            
-            metodoPix.addEventListener('click', (e) => {
-                e.preventDefault();
-                cliqueCount++;
-                
-                if (cliqueCount === 1) {
-                    setTimeout(() => {
-                        if (cliqueCount === 1) {
-                            this.mostrarModalPix();
-                            cliqueCount = 0;
-                        }
-                    }, 300);
-                }
-            });
-        }
-
+        // O modal do PIX NÃO abre mais ao clicar no método (removido o "PIX simulado").
+        // Ele agora é aberto somente após "Finalizar compra", com o QR Code real.
+        // Mantém apenas o atalho Escape para fechar o pop-up quando estiver aberto.
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 this.fecharModalPix();
@@ -641,6 +691,77 @@ simularProcessamento(metodoPagamento, tipoEnvio) {
             overlay.classList.add('mostrar');
             this.iniciarTimerPix();
             this.setupModalEvents(modal, overlay);
+            // INTEGRAÇÃO: gera o PIX real e preenche o modal com o QR Code verdadeiro
+            this.gerarPixNoModal();
+        }
+    }
+
+    // Monta o payload do pedido a partir do carrinho + dados de entrega.
+    // Retorna null se não há itens mapeáveis (sem produtoId).
+    montarPayloadPedido() {
+        const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+        const itens = carrinho
+            .filter(i => i.produtoId)
+            .map(i => ({ produtoId: i.produtoId, quantidade: i.quantidade || 1 }));
+        if (!itens.length) return null;
+
+        const dados = JSON.parse(localStorage.getItem('dadosEntrega') || '{}');
+        const enderecoEntrega = {
+            cep: (dados.cep && dados.cep.replace(/\D/g, '').length === 8) ? dados.cep : '32600-000',
+            logradouro: dados.endereco || 'Endereço não informado',
+            numero: 'S/N',
+            bairro: 'Centro',
+            cidade: 'Belo Horizonte',
+            estado: 'MG'
+        };
+
+        const envioAtivo = document.querySelector('.envio-opcao.ativo');
+        const tipoEnvio = envioAtivo ? envioAtivo.dataset.envio : 'padrao';
+        const freteTipo = tipoEnvio === 'expresso' ? 'expressa' : 'padrao';
+
+        return {
+            itens,
+            enderecoEntrega,
+            frete: { tipo: freteTipo, valor: Number(this.freteAtual) || 0 },
+            metodoPagamento: 'pix',
+            cupom: this.cupomAplicado ? this.codigoCupomAtual : undefined
+        };
+    }
+
+    // Cria pedido + cobrança PIX e injeta o QR Code real dentro do modal.
+    async gerarPixNoModal() {
+        // O pedido só é criado ao clicar em "Finalizar compra".
+        // Aqui apenas exibimos o PIX se ele JÁ tiver sido gerado;
+        // caso contrário, orientamos o usuário a finalizar.
+        if (this.pixGerado) {
+            this.preencherModalComPix(this.pixGerado);
+            return;
+        }
+        this.avisoNoModal('Clique em "Finalizar compra" para gerar o PIX e o QR Code.');
+    }
+
+    // Substitui o placeholder pelo QR Code real e o código copia-e-cola real
+    preencherModalComPix(pix) {
+        const container = document.querySelector('#modalPix .qrcode-container');
+        if (container && pix.qrCodeUrl) {
+            container.innerHTML =
+                '<img src="' + pix.qrCodeUrl + '" alt="QR Code PIX" ' +
+                'style="width:220px;height:220px;border-radius:8px;display:block;margin:0 auto;">';
+        }
+        const codigo = document.querySelector('#modalPix .codigo-pix');
+        if (codigo && pix.pixCopiaECola) {
+            codigo.textContent = pix.pixCopiaECola;
+            codigo.style.wordBreak = 'break-all';
+            codigo.style.fontSize = '11px';
+        }
+    }
+
+    avisoNoModal(texto) {
+        const container = document.querySelector('#modalPix .qrcode-container');
+        if (container) {
+            container.innerHTML =
+                '<div class="qrcode-placeholder"><span style="font-size:13px;text-align:center;padding:10px;">' +
+                texto + '</span></div>';
         }
     }
 
@@ -703,6 +824,9 @@ simularProcessamento(metodoPagamento, tipoEnvio) {
                             <div class="barra-progresso-tempo"></div>
                         </div>
                     </div>
+                    <button class="btn-ja-paguei" style="width:100%;margin-top:16px;padding:14px;border:none;border-radius:8px;background:#26D07C;color:#fff;font-weight:600;font-size:16px;cursor:pointer;">
+                        Já paguei
+                    </button>
                 </div>
             </div>
         `;
@@ -759,6 +883,15 @@ simularProcessamento(metodoPagamento, tipoEnvio) {
         if (copiarBtn) {
             copiarBtn.addEventListener('click', () => {
                 this.copiarCodigoPix();
+            });
+        }
+
+        // "Já paguei" -> finaliza e vai para a tela de conclusão.
+        const jaPagueiBtn = modal.querySelector('.btn-ja-paguei');
+        if (jaPagueiBtn) {
+            jaPagueiBtn.addEventListener('click', () => {
+                if (this.timerInterval) clearInterval(this.timerInterval);
+                window.location.href = 'concluida.html';
             });
         }
     }
