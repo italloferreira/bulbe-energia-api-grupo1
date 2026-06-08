@@ -16,6 +16,11 @@ function gerarProtocolo(id) {
   return `SUP-${String(id).padStart(5, '0')}-${data}`;
 }
  
+// Valida formato de e-mail
+function emailValido(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+ 
 // Envia e-mail de confirmação ao cliente
 async function enviarEmailCliente(email, nome, protocolo, assunto) {
   await transporter.sendMail({
@@ -70,9 +75,15 @@ async function abrirChamado(req, res) {
     });
   }
  
-  if (!usuario || !usuario.email || !usuario.nome) {
+  if (!usuario || !usuario.nome) {
     return res.status(400).json({
       erro: 'usuario com nome e email são obrigatórios'
+    });
+  }
+ 
+  if (!usuario.email || !emailValido(usuario.email)) {
+    return res.status(400).json({
+      erro: 'E-mail do usuário inválido'
     });
   }
  
