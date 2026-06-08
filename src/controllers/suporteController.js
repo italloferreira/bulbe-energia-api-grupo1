@@ -8,7 +8,19 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS
   }
 });
-
+ 
+// Gera protocolo único ex: SUP-00001-20250520
+function gerarProtocolo(id) {
+  const data = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  return `SUP-${String(id).padStart(5, '0')}-${data}`;
+}
+ 
+// Valida formato de e-mail
+function emailValido(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+ 
+// Envia e-mail de confirmação ao cliente
 async function enviarEmailCliente(email, nome, protocolo, assunto) {
   await transporter.sendMail({
     from: `"Bulbe Energia Suporte" <${process.env.EMAIL_USER}>`,
@@ -57,19 +69,21 @@ async function abrirChamado(req, res) {
   if (!mensagem || typeof mensagem !== 'string' || mensagem.trim() === '') {
     return res.status(400).json({ erro: 'mensagem é obrigatória' });
   }
-
-  if (!usuario || !usuario.email || !usuario.nome) {
-    return res.status(400).json({ erro: 'usuario com nome e email são obrigatórios' });
+ 
+  if (!usuario || !usuario.nome) {
+    return res.status(400).json({
+      erro: 'usuario com nome e email são obrigatórios'
+    });
   }
-
-  const criadoEm = new Date().toISOString();
-
-  const info = db.prepare(`
-    INSERT INTO chamados (titulo, descricao, pedido_id, status, data_abertura, usuario_nome, usuario_email)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run(assunto.trim(), mensagem.trim(), pedido_id || null, 'aberto', criadoEm, usuario.nome, usuario.email);
-
-  const id = info.lastInsertRowid;
+ 
+  if (!usuario.email || !emailValido(usuario.email)) {
+    return res.status(400).json({
+      erro: 'E-mail do usuário inválido'
+    });
+  }
+ 
+  // Cria chamado
+  const id = chamados._proximoId++;
   const protocolo = gerarProtocolo(id);
 
   db.prepare('UPDATE chamados SET protocolo = ? WHERE id = ?').run(protocolo, id);
