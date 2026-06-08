@@ -1,6 +1,5 @@
-const produtos = require('../data/data');
+const db = require('../data/db');
  
-// Categorias válidas (slugs)
 const CATEGORIAS_VALIDAS = [
   'casa',
   'eletronicos',
@@ -8,111 +7,85 @@ const CATEGORIAS_VALIDAS = [
   'ofertas'
 ];
  
-// RF-01 · Catálogo home
-function listarCatalogoHome(req, res) {
-  const produtosAtivos = produtos.filter(
-    p => p.ativo
-  );
- 
-  res.json({
-    produtos: produtosAtivos
-  });
+function mapProduto(row) {
+  return {
+    id: row.id,
+    nome: row.nome,
+    descricaoLonga: row.descricaoLonga,
+    galeriaImagens: JSON.parse(row.galeriaImagens || '[]'),
+    preco: row.preco,
+    desconto: row.desconto,
+    destaque: !!row.destaque,
+    marca: row.marca,
+    categoria: row.categoria,
+    especificacoesTecnicas: JSON.parse(row.especificacoesTecnicas || '{}'),
+    estoque: row.estoque,
+    avaliacoesResumidas: JSON.parse(row.avaliacoesResumidas || '{}'),
+    ativo: !!row.ativo
+  };
 }
  
-// RF-02 · Buscar produtos
+function listarCatalogoHome(req, res) {
+  const rows = db.prepare('SELECT * FROM produtos WHERE ativo = 1').all();
+  res.json({ produtos: rows.map(mapProduto) });
+}
+ 
 function listarProdutos(req, res) {
   const { search } = req.query;
  
-  const lista = produtos.filter(
-    p => p.ativo
-  );
- 
   if (search) {
-    const termo = search.toLowerCase();
- 
-    const resultado = lista.filter(
-      p => p.nome.toLowerCase().includes(termo)
-    );
- 
-    return res.json(resultado);
+    const rows = db.prepare('SELECT * FROM produtos WHERE ativo = 1 AND nome LIKE ?').all(`%${search}%`);
+    return res.json(rows.map(mapProduto));
   }
  
-  res.json(lista);
+  const rows = db.prepare('SELECT * FROM produtos WHERE ativo = 1').all();
+  res.json(rows.map(mapProduto));
 }
  
-// RF-04 · Produto por ID
 function buscarProdutoPorId(req, res) {
   const id = parseInt(req.params.id);
+  const row = db.prepare('SELECT * FROM produtos WHERE id = ?').get(id);
  
-  const produto = produtos.find(
-    p => p.id === id
-  );
- 
-  if (!produto) {
-    return res.status(404).json({
-      erro: 'Produto não encontrado'
-    });
+  if (!row) {
+    return res.status(404).json({ erro: 'Produto não encontrado' });
   }
  
-  const isAdmin =
-    req.headers['x-admin'] === 'true';
- 
-  if (!produto.ativo && !isAdmin) {
-    return res.status(404).json({
-      erro: 'Produto não encontrado'
-    });
+  const isAdmin = req.headers['x-admin'] === 'true';
+  if (!row.ativo && !isAdmin) {
+    return res.status(404).json({ erro: 'Produto não encontrado' });
   }
  
+  const p = mapProduto(row);
   return res.json({
-    id: produto.id,
-    nome: produto.nome,
-    descricaoLonga: produto.descricaoLonga,
-    galeriaImagens: produto.galeriaImagens,
-    preco: produto.preco,
-    desconto: produto.desconto,
-    marca: produto.marca,
-    categoria: produto.categoria,
-    especificacoesTecnicas: produto.especificacoesTecnicas,
-    estoque: produto.estoque,
-    avaliacoesResumidas: produto.avaliacoesResumidas
+    id: p.id,
+    nome: p.nome,
+    descricaoLonga: p.descricaoLonga,
+    galeriaImagens: p.galeriaImagens,
+    preco: p.preco,
+    desconto: p.desconto,
+    marca: p.marca,
+    categoria: p.categoria,
+    especificacoesTecnicas: p.especificacoesTecnicas,
+    estoque: p.estoque,
+    avaliacoesResumidas: p.avaliacoesResumidas
   });
 }
  
-// RF · Produtos em destaque
 function listarDestaques(req, res) {
-  const destaques = produtos
-    .filter(p =>
-      p.destaque &&
-      p.ativo &&
-      p.estoque > 0
-    )
-    .slice(0, 10);
- 
+  const rows = db.prepare('SELECT * FROM produtos WHERE destaque = 1 AND ativo = 1 AND estoque > 0 LIMIT 10').all();
   res.set('Cache-Control', 'public, max-age=300');
- 
-  res.json(destaques);
+  res.json(rows.map(mapProduto));
 }
  
-// RF · Produtos em oferta
 function listarOfertas(req, res) {
-  const ofertas = produtos
-    .filter(p =>
-      p.desconto > 0 &&
-      p.ativo &&
-      p.estoque > 0
-    )
-    .slice(0, 10);
- 
+  const rows = db.prepare('SELECT * FROM produtos WHERE desconto > 0 AND ativo = 1 AND estoque > 0 LIMIT 10').all();
   res.set('Cache-Control', 'public, max-age=300');
- 
-  res.json(ofertas);
+  res.json(rows.map(mapProduto));
 }
  
-// RF · Listar produtos por categoria com paginação e ordenação
 function listarPorCategoria(req, res) {
   const { categoria } = req.params;
  
-  // Valida categoria
   if (!CATEGORIAS_VALIDAS.includes(categoria)) {
     return res.status(404).json({
       erro: `Categoria '${categoria}' não encontrada.`,
@@ -120,96 +93,86 @@ function listarPorCategoria(req, res) {
     });
   }
  
-  const {
-    pagina = 1,
-    limite = 20,
-    ordenar_por
-  } = req.query;
+  const paginaNum = parseInt(req.query.pagina);
+  const limiteNum = parseInt(req.query.limite);
+  const { ordenar_por } = req.query;
  
-  const paginaNum = parseInt(pagina);
-  const limiteNum = parseInt(limite);
+  // Validação de paginação
+  if (req.query.pagina !== undefined && (!Number.isInteger(paginaNum) || paginaNum <= 0)) {
+    return res.status(400).json({ erro: 'pagina deve ser um inteiro positivo' });
+  }
  
-  // Filtra por categoria (ofertas = desconto > 0)
-  let lista = produtos.filter(p => {
-    if (!p.ativo) return false;
+  if (req.query.limite !== undefined && (!Number.isInteger(limiteNum) || limiteNum <= 0)) {
+    return res.status(400).json({ erro: 'limite deve ser um inteiro positivo' });
+  }
  
-    if (categoria === 'ofertas') {
-      return p.desconto > 0 && p.estoque > 0;
-    }
+  const pagina = paginaNum || 1;
+  const limite = limiteNum || 20;
  
-    return p.categoria === categoria;
-  });
+  let sql, countSql, params;
  
-  // Ordenação
-  if (ordenar_por) {
+  if (categoria === 'ofertas') {
+    sql = 'SELECT * FROM produtos WHERE ativo = 1 AND desconto > 0 AND estoque > 0';
+    countSql = 'SELECT COUNT(*) as total FROM produtos WHERE ativo = 1 AND desconto > 0 AND estoque > 0';
+    params = [];
+  } else {
+    sql = 'SELECT * FROM produtos WHERE ativo = 1 AND categoria = ?';
+    countSql = 'SELECT COUNT(*) as total FROM produtos WHERE ativo = 1 AND categoria = ?';
+    params = [categoria];
+  }
+ 
+  // Validação e aplicação da ordenação
+  if (ordenar_por !== undefined) {
     switch (ordenar_por) {
       case 'preco_asc':
-        lista.sort((a, b) => {
-          const precoA = a.preco - (a.preco * (a.desconto || 0) / 100);
-          const precoB = b.preco - (b.preco * (b.desconto || 0) / 100);
-          return precoA - precoB;
-        });
+        sql += ' ORDER BY (preco - preco * (COALESCE(desconto,0))/100) ASC';
         break;
- 
       case 'preco_desc':
-        lista.sort((a, b) => {
-          const precoA = a.preco - (a.preco * (a.desconto || 0) / 100);
-          const precoB = b.preco - (b.preco * (b.desconto || 0) / 100);
-          return precoB - precoA;
-        });
+        sql += ' ORDER BY (preco - preco * (COALESCE(desconto,0))/100) DESC';
         break;
- 
       case 'mais_vendidos':
-        lista.sort((a, b) =>
-          (b.avaliacoesResumidas?.total || 0) -
-          (a.avaliacoesResumidas?.total || 0)
-        );
+        sql += " ORDER BY JSON_EXTRACT(avaliacoesResumidas, '$.total') DESC";
         break;
- 
       case 'novidades':
-        lista.sort((a, b) => b.id - a.id);
+        sql += ' ORDER BY id DESC';
         break;
- 
       default:
         return res.status(400).json({
           erro: `Valor de ordenar_por inválido: '${ordenar_por}'.`,
-          valoresPermitidos: [
-            'preco_asc',
-            'preco_desc',
-            'mais_vendidos',
-            'novidades'
-          ]
+          valoresPermitidos: ['preco_asc', 'preco_desc', 'mais_vendidos', 'novidades']
         });
     }
   }
  
-  // Paginação
-  const total = lista.length;
-  const totalPaginas = Math.ceil(total / limiteNum);
-  const inicio = (paginaNum - 1) * limiteNum;
-  const fim = inicio + limiteNum;
-  const paginaAtual = lista.slice(inicio, fim);
+  sql += ' LIMIT ? OFFSET ?';
+  const allParams = [...params, limite, (pagina - 1) * limite];
  
-  // Formata retorno conforme critérios de aceitação
-  const resultado = paginaAtual.map(p => ({
-    id: p.id,
-    nome: p.nome,
-    preco: p.preco,
-    precoComDesconto: p.desconto > 0
-      ? parseFloat(
-          (p.preco - (p.preco * p.desconto / 100)).toFixed(2)
-        )
-      : p.preco,
-    imagemPrincipal: p.galeriaImagens?.[0] || null,
-    categoria: p.categoria,
-    estoqueDisponivel: p.estoque
-  }));
+  const totalRow = db.prepare(countSql).get(...params);
+  const total = totalRow.total;
+  const rows = db.prepare(sql).all(...allParams);
+  const totalPaginas = Math.ceil(total / limite);
+ 
+  const resultado = rows.map(p => {
+    const precoComDesconto = p.desconto > 0
+      ? parseFloat((p.preco - (p.preco * p.desconto / 100)).toFixed(2))
+      : p.preco;
+    const galeria = JSON.parse(p.galeriaImagens || '[]');
+    return {
+      id: p.id,
+      nome: p.nome,
+      preco: p.preco,
+      precoComDesconto,
+      imagemPrincipal: galeria[0] || null,
+      categoria: p.categoria,
+      estoqueDisponivel: p.estoque
+    };
+  });
  
   res.json({
     categoria,
     paginacao: {
-      paginaAtual: paginaNum,
-      limite: limiteNum,
+      paginaAtual: pagina,
+      limite,
       total,
       totalPaginas
     },
