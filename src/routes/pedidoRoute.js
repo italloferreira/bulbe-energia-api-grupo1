@@ -1,13 +1,25 @@
-// src/routes/pedidoRoute.js
 const express = require('express');
 const router = express.Router();
 
-const { criarPedido, listarPedidos } = require('../controllers/pedidoController');
+const autenticar = require('../middlewares/auth');
 
-// RF-13 · POST /api/pedidos · finaliza a compra e gera um pedido
-router.post('/', criarPedido);
+const {
+  criarPedido,
+  listarPedidos,
+  obterPedido,
+  cancelarPedido
+} = require('../controllers/pedidoController');
 
-// RF-14 · GET /api/pedidos · histórico de pedidos do usuário
-router.get('/', listarPedidos);
+// POST /api/pedidos - Criar novo pedido
+router.post('/', autenticar, criarPedido);
+
+// GET /api/pedidos - Listar pedidos do usuário com filtros
+router.get('/', autenticar, listarPedidos);
+
+// GET /api/pedidos/:id - Obter detalhes de um pedido específico
+router.get('/:id', autenticar, obterPedido);
+
+// POST /api/pedidos/:id/cancelar - Cancelar um pedido
+router.post('/:id/cancelar', autenticar, cancelarPedido);
 
 module.exports = router;
