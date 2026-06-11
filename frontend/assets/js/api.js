@@ -148,6 +148,22 @@ window.BulbeAPI = (function () {
     });
   }
 
+  /* ----------------------- Carrinho ----------------------- */
+  async function adicionarItemCarrinho(produtoId, quantidade) {
+    return request('/api/v1/carrinho/itens', {
+      method: 'POST',
+      body: { produtoId, quantidade }
+    });
+  }
+  function visualizarCarrinho() {
+    return request('/api/v1/carrinho');
+  }
+  async function removerItemCarrinho(itemId) {
+    return request('/api/v1/carrinho/itens/' + itemId, {
+      method: 'DELETE'
+    });
+  }
+
   /* ----------------------- Pedidos / Pagamento ----------------------- */
   function criarPedido(payload) {
     return request('/api/pedidos', { method: 'POST', body: payload });
@@ -175,6 +191,7 @@ window.BulbeAPI = (function () {
     cadastrar, login,
     catalogoHome, listarProdutos, produto,
     calcularFrete, validarCupom,
+    adicionarItemCarrinho, visualizarCarrinho, removerItemCarrinho,
     criarPedido, listarPedidos, criarPagamentoPix,
     abrirChamado
   };

@@ -225,6 +225,30 @@ document.addEventListener('DOMContentLoaded', () => {
     atualizarResumo();
   }
 
+  // Sincronizar remoção com backend
+  async function removerDoBackend(item) {
+    if (!window.BulbeAPI || !window.BulbeAPI.estaLogado() || !item.itemIdBackend) return;
+    try {
+      await BulbeAPI.removerItemCarrinho(item.itemIdBackend);
+    } catch (err) {
+      console.warn('⚠️ Erro ao remover do backend:', err.message);
+    }
+  }
+
+  // Sincronizar quantidade com backend
+  async function atualizarQtdBackend(item, novaQtd) {
+    if (!window.BulbeAPI || !window.BulbeAPI.estaLogado() || !item.itemIdBackend) return;
+    try {
+      await fetch('/api/v1/carrinho/itens/' + item.itemIdBackend, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('bulbe_token') || '') },
+        body: JSON.stringify({ quantidade: novaQtd })
+      });
+    } catch (err) {
+      console.warn('⚠️ Erro ao atualizar qtd no backend:', err.message);
+    }
+  }
+
   // Eventos (+, -, remover)
   container.addEventListener('click', (e) => {
     const prodEl = e.target.closest('.produto');
@@ -238,14 +262,18 @@ document.addEventListener('DOMContentLoaded', () => {
       item.quantidade = (item.quantidade || 1) + 1;
       salvarCarrinho();
       renderCarrinho();
+      atualizarQtdBackend(item, item.quantidade);
     } else if (e.target.classList.contains('menos')) {
       item.quantidade = Math.max((item.quantidade || 1) - 1, 1);
       salvarCarrinho();
       renderCarrinho();
+      atualizarQtdBackend(item, item.quantidade);
     } else if (e.target.closest('.remover')) {
+      const itemRemovido = carrinho.find((p) => p.id === id);
       carrinho = carrinho.filter((p) => p.id !== id);
       salvarCarrinho();
       renderCarrinho();
+      if (itemRemovido) removerDoBackend(itemRemovido);
     }
   });
 

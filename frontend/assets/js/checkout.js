@@ -56,6 +56,7 @@ class Checkout {
         this.codigoCupomAtual = '';
         this.descontoAtual = 0;
         this.freteAtual = 0;
+        this.opcoesFrete = [];
         this.subtotal = 93.90; // VAI SER ATUALIZADO PELO CARRINHO
         this.tempoRestante = 900;
         this.timerInterval = null;
@@ -144,14 +145,17 @@ class Checkout {
     // ----------------------------
 
     // SELETOR DE CEP
-    setupSeletorCep() {
+    async setupSeletorCep() {
         const selectCep = document.querySelector('.select-cep');
         
         if (selectCep) {
-            selectCep.addEventListener('change', (e) => {
+            selectCep.addEventListener('change', async (e) => {
                 const cepSelecionado = e.target.value;
                 console.log(`📍 CEP selecionado: ${cepSelecionado}`);
                 this.mostrarNotificacao(`CEP ${cepSelecionado} selecionado`);
+                if (cepSelecionado) {
+                    await this.calcularFreteApi(cepSelecionado);
+                }
             });
 
            
@@ -163,6 +167,50 @@ class Checkout {
                 selectCep.style.boxShadow = 'none';
             });
         }
+
+        // Calcular frete para o CEP inicial selecionado
+        if (selectCep && selectCep.value) {
+            await this.calcularFreteApi(selectCep.value);
+        }
+    }
+
+    async calcularFreteApi(cep) {
+        const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+        const itens = carrinho
+            .filter(i => i.produtoId)
+            .map(i => ({ id: i.produtoId, quantidade: i.quantidade || 1 }));
+        if (!itens.length) return;
+
+        try {
+            const resultado = await BulbeAPI.calcularFrete(cep, itens);
+            this.opcoesFrete = resultado.opcoes;
+            this.atualizarOpcoesEnvio(resultado.opcoes);
+        } catch (err) {
+            console.warn('⚠️ Erro ao calcular frete:', err.message);
+        }
+    }
+
+    atualizarOpcoesEnvio(opcoes) {
+        opcoes.forEach(opcao => {
+            const el = document.querySelector(`.envio-opcao[data-envio="${opcao.tipo === 'expressa' ? 'expresso' : 'padrao'}"]`);
+            if (!el) return;
+            const precoEl = el.querySelector('.opcao-preco');
+            const prazoEl = el.querySelector('.opcao-info .opcao-prazo');
+            if (precoEl) {
+                precoEl.textContent = opcao.valor === 0 ? 'Grátis' : `R$ ${opcao.valor.toFixed(2).replace('.', ',')}`;
+            }
+            if (prazoEl) {
+                prazoEl.textContent = `${opcao.prazoDiasUteis} dias úteis`;
+            }
+        });
+        // Recalcular frete da opção atualmente selecionada
+        const ativo = document.querySelector('.envio-opcao.ativo');
+        if (ativo) {
+            const tipo = ativo.dataset.envio;
+            const opcao = opcoes.find(o => (tipo === 'expresso' ? 'expressa' : 'padrao') === o.tipo);
+            if (opcao) this.freteAtual = opcao.valor;
+        }
+        this.atualizarResumo();
     }
 
     // ATUALIZAR RESUMO DO PEDIDO
@@ -270,7 +318,8 @@ class Checkout {
             radioCircle.style.borderColor = '#08068D';
         }
         
-        this.freteAtual = tipoEnvio === 'expresso' ? 15.90 : 0.00;
+        const opcaoApi = this.opcoesFrete.find(o => (tipoEnvio === 'expresso' ? 'expressa' : 'padrao') === o.tipo);
+        this.freteAtual = opcaoApi ? opcaoApi.valor : (tipoEnvio === 'expresso' ? 15.90 : 0.00);
         this.atualizarResumo();
         
         const nomeEnvio = tipoEnvio === 'expresso' ? 'Expressa' : 'Padrão';

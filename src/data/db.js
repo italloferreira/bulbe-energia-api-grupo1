@@ -22,6 +22,37 @@ function setupDb() {
   ];
   sqls.forEach(s => { try { db.exec(s); } catch (ex) {} });
 
+  // Índices para otimizar consultas frequentes
+  const indices = [
+    // carrinho: buscar por usuário, upsert produto+usuário
+    `CREATE INDEX IF NOT EXISTS idx_carrinho_usuario ON carrinho_itens(usuario_id)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_carrinho_usuario_produto ON carrinho_itens(usuario_id, produto_id)`,
+
+    // pedidos: listar por usuário ordenado por data, filtros
+    `CREATE INDEX IF NOT EXISTS idx_pedidos_usuario_criado ON pedidos(usuario_id, criadoEm DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_pedidos_status ON pedidos(status)`,
+    `CREATE INDEX IF NOT EXISTS idx_pedidos_criadoEm ON pedidos(criadoEm)`,
+
+    // itens do pedido: buscar por pedido
+    `CREATE INDEX IF NOT EXISTS idx_pedidos_itens_pedido ON pedidos_itens(pedido_id)`,
+
+    // pagamentos: buscar por pedido+status, webhook por gatewayId
+    `CREATE INDEX IF NOT EXISTS idx_pagamentos_pedido_status ON pagamentos(pedido_id, status)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_pagamentos_gatewayId ON pagamentos(gatewayId)`,
+
+    // cupons: verificar uso por usuário
+    `CREATE INDEX IF NOT EXISTS idx_cupons_usuarios_codigo_usuario ON cupons_usuarios(cupom_codigo, usuario_id)`,
+
+    // produtos: filtros comuns do catálogo
+    `CREATE INDEX IF NOT EXISTS idx_produtos_ativo_categoria ON produtos(ativo, categoria)`,
+    `CREATE INDEX IF NOT EXISTS idx_produtos_destaque_ativo_estoque ON produtos(destaque, ativo, estoque)`,
+    `CREATE INDEX IF NOT EXISTS idx_produtos_desconto_ativo_estoque ON produtos(desconto, ativo, estoque)`,
+
+    // chamados: buscar por protocolo
+    `CREATE INDEX IF NOT EXISTS idx_chamados_protocolo ON chamados(protocolo)`,
+  ];
+  indices.forEach(s => { try { db.exec(s); } catch (ex) {} });
+
   const cols = {
     pagamentos: ['gatewayId','qrCodeUrl','pixCopiaECola','criadoEm','expiraEm','pagoEm'],
     chamados: ['protocolo','usuario_nome','usuario_email','mensagem'],

@@ -87,6 +87,31 @@ function normalizarImagem(srcBruto) {
     return origem + '/' + srcBruto.replace(/^\.\//, '');
 }
 
+// ========== SINCRONIZAR ITEM COM O BACKEND ==========
+async function sincronizarItemBackend(produto, quantidade) {
+    if (!window.BulbeAPI || !window.BulbeAPI.estaLogado() || !produto.produtoId) return;
+    try {
+        const resultado = await BulbeAPI.adicionarItemCarrinho(produto.produtoId, quantidade);
+        // Salvar itemId devolvido pelo backend no localStorage
+        const itemBackend = resultado.itens.find(i => i.produtoId === produto.produtoId);
+        if (itemBackend) {
+            produto.itemIdBackend = itemBackend.itemId;
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        }
+    } catch (err) {
+        console.warn('⚠️ Erro ao sincronizar carrinho com backend:', err.message);
+    }
+}
+
+async function sincronizarRemocaoBackend(item) {
+    if (!window.BulbeAPI || !window.BulbeAPI.estaLogado() || !item.itemIdBackend) return;
+    try {
+        await BulbeAPI.removerItemCarrinho(item.itemIdBackend);
+    } catch (err) {
+        console.warn('⚠️ Erro ao remover item do backend:', err.message);
+    }
+}
+
 // ========== FUNÇÃO PRINCIPAL - ADICIONAR AO CARRINHO ==========
 window.adicionarAoCarrinho = function (produto) {
     console.log('🎯 ADICIONANDO PRODUTO:', produto);
@@ -132,6 +157,12 @@ window.adicionarAoCarrinho = function (produto) {
     // Atualizar contador e notificação
     atualizarContadorCarrinho();
     mostrarNotificacao('✅ ' + produtoFormatado.nome + ' adicionado ao carrinho!');
+
+    // Sincronizar com backend se logado
+    const itemNoCarrinho = carrinho.find(item => item.id === produtoFormatado.id);
+    if (itemNoCarrinho) {
+        sincronizarItemBackend(itemNoCarrinho, 1);
+    }
 
     return true;
 };
@@ -192,10 +223,14 @@ window.limparCarrinho = function () {
 };
 
 window.removerDoCarrinho = function (idProduto) {
+    const itemRemovido = carrinho.find(item => item.id === idProduto);
     carrinho = carrinho.filter(item => item.id !== idProduto);
     localStorage.setItem('carrinho', JSON.stringify(carrinho));
     atualizarContadorCarrinho();
     console.log('❌ Produto removido:', idProduto);
+    if (itemRemovido) {
+        sincronizarRemocaoBackend(itemRemovido);
+    }
 };
 
 // ========== MENU LATERAL ==========
